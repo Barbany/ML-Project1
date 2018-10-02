@@ -54,7 +54,7 @@ We need to modify the default execution behavior. To do that:
 
 1. Go to `Run -> Edit Configurations`
 2. Click the + icon and select _"Python"_.
-3. Change _"Script path"_ by _"Module name"_ and set it to _"hackmob"_.
+3. Change _"Script path"_ by _"Module name"_ and set it to _"src"_.
 4. Uncheck the _"Show command line afterwards"_ option (if checked).
 
 If you want to execute a test module execute it as you always do. **If it doesn't work tell me**
