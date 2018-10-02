@@ -1,7 +1,7 @@
 """Stochastic Gradient Descent"""
 
-from utils.costs import compute_loss
-from utils.helpers import batch_iter
+from src.utils.costs import compute_loss
+from src.utils.helpers import batch_iter
 
 
 def compute_stoch_gradient(y, tx, w):
