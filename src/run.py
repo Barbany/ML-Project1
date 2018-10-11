@@ -31,12 +31,11 @@ def make_tag(params):
     return '-'.join(
         key + '_' + to_string(params[key])
         for key in tag_params
-        if key not in default_params or params[key] != default_params[key]
     )
 
 
 def tee_stdout(log_path):
-    log_file = open(log_path, 'a', 1)
+    log_file = open(log_path, 'w', 1)
     stdout = sys.stdout
 
     class Tee:
@@ -61,9 +60,14 @@ def main(**params):
     seed = params.get('seed')
 
     results_path = params['results_path']
-
+    verbose = params['verbose']
     # Put all outputs on the log file stored in the result directory
     tee_stdout(os.path.join(results_path, make_tag(params)))
+    print('Hello everyone')
+    print('Look how all print go to the log')
+    if verbose:
+        print('My seed is', seed)
+    print('Hi sofia')
 
 
 if __name__ == '__main__':
