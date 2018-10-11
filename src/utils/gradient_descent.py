@@ -8,7 +8,12 @@ def compute_gradient(y, tx, w):
     return -1/len(y)*tx.transpose().dot(y-tx.dot(w))
 
 
-def gradient_descent(y, tx, initial_w, max_iters, gamma):
+def compute_mae_gradient(y, tx, w):
+    """Compute the gradient for mae loss."""
+    return -1/len(y)*tx.transpose().dot([-1 if e<=0 else 1 for e in (y-tx.dot(w))])
+
+
+def gradient_descent(y, tx, initial_w, max_iters, gamma, mse=True):
     """Gradient descent algorithm."""
     # Define parameters to store w and loss
     ws = [initial_w]
@@ -16,7 +21,10 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma):
     w = initial_w
     for n_iter in range(max_iters):
         loss = compute_loss(y, tx, w)
-        w = w - gamma*compute_gradient(y, tx, w)
+        if mse:
+            w = w - gamma*compute_gradient(y, tx, w)
+        else:
+            w = w - gamma * compute_mae_gradient(y, tx, w)
         # store w and loss
         ws.append(w)
         losses.append(loss)
