@@ -20,7 +20,14 @@ def load_csv_data(data_path, sub_sample=None):
         input_data = input_data[::sub_sample]
         ids = ids[::sub_sample]
 
+<<<<<<< HEAD
     return yb, input_data, ids
+=======
+    if add_outlier:
+        # outlier experiment
+        height = np.concatenate([height, [1.1, 1.2]])
+        weight = np.concatenate([weight, [51.5 / 0.454, 55.3 / 0.454]])
+>>>>>>> 65bae43966043606bf83c20f393effb7bcb9eaed
 
 
 def predict_labels(weights, data):

@@ -13,7 +13,7 @@ Machine Learning algorithm with own optimization functions to find the Higgs bos
 
 ## Project Structure
 #### Data
-The raw data must be keeped and unchanged (set permissions to only read for more security if you want) and it's too big to be uploaded to GitHub. The default directory is `../../data` and there will only be the original files downloaded from Kaggle.
+The raw data must be keeped and unchanged (set permissions to only read for more security if you want) and it's too big to be uploaded to GitHub. The default directory is `../data` and there will only be the original files downloaded from Kaggle.
 
 We may implement preprocessing and cleaning techniques such as substituting meaningul values (indicated with -999.0 in this dataset) with NA. Even with this simple action, create a script or python file and save it to recreat it a near future if needed. Remember not to change the original data so save the file in another folder.
 
