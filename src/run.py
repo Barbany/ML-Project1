@@ -1,10 +1,16 @@
 """Main function of the project. Execute it with the appropriate arguments to perform training of a linear model
 with given constraints."""
 
+# Libraries to deal with files
 import os
 import sys
+
 import argparse
+
+import numpy as np
+
 from utils.helpers import load_csv_data
+from utils.stochastic_gradient_descent import stochastic_gradient_descent
 
 default_params = {
     'verbose': False,
@@ -12,10 +18,15 @@ default_params = {
     'mda': False,
     'results_path': '../results',
     'raw_data': '../data',
-    'seed': 123
+    'seed': 123,
+    'max_iters': 50,
+    'gamma': 0.01,
+    'batch_size': 128,
+    'bias': True,
+    'loss_function': 'mse'
 }
 tag_params = [
-    'pca', 'mda'
+    'pca', 'mda', 'bias', 'loss_function'
 ]
 
 
@@ -57,14 +68,22 @@ def main(**params):
         default_params,
         **params
     )
-    seed = params.get('seed')
+    np.random.seed(params['seed'])
 
     results_path = params['results_path']
-    verbose = params['verbose']
+
     # Put all outputs on the log file stored in the result directory
     tee_stdout(os.path.join(results_path, make_tag(params)))
 
     yb, input_data, ids = load_csv_data(os.path.join(params['raw_data'], 'train.csv'))
+
+    if params['bias']:
+        input_data = np.append(np.ones((input_data.shape[0], 1)), input_data, axis=1)
+
+    initial_w = np.random.rand(input_data.shape[0])
+    stochastic_gradient_descent(yb, input_data, initial_w, batch_size=params['batch_size'],
+                                max_iters=params['max_iters'], gamma=params['gamma'],
+                                loss_function=params['loss_function'])
 
 
 if __name__ == '__main__':
@@ -94,6 +113,22 @@ if __name__ == '__main__':
         '--verbose', type=parse_bool,
         help='Provide additional details about the program. This level of detail'
              ' can be very helpful for troubleshooting problems'
+    )
+    parser.add_argument(
+        '--bias', type=parse_bool,
+        help='Include a bias term in the linear regression model'
+    )
+    parser.add_argument(
+        '--max_iterations', type=int,
+        help='Maximum number of iterations of the SGD algorithm'
+    )
+    parser.add_argument(
+        '--batch_size', type=int,
+        help='Number of data points used to update the weight vector in each iteration'
+    )
+    parser.add_argument(
+        '--gamma', type=float,
+        help='Learning rate: Determines how fast the weight converges to an optimum'
     )
     parser.set_defaults(**default_params)
 
