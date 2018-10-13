@@ -1,30 +1,17 @@
 """Gradient Descent"""
 
-from utils.costs import compute_loss
+from utils.costs import compute_loss, compute_gradient
 
 
-def compute_gradient(y, tx, w):
-    """Compute the gradient."""
-    return -1 / len(y) * tx.transpose().dot(y - tx.dot(w))
-
-
-def compute_mae_gradient(y, tx, w):
-    """Compute the gradient for mae loss."""
-    return -1 / len(y) * tx.transpose().dot([-1 if e <= 0 else 1 for e in (y - tx.dot(w))])
-
-
-def gradient_descent(y, tx, initial_w, max_iters, gamma, mse=True):
+def gradient_descent(y, tx, initial_w, max_iters, gamma, loss_function='mse'):
     """Gradient descent algorithm."""
     # Define parameters to store w and loss
     ws = [initial_w]
     losses = []
     w = initial_w
     for n_iter in range(max_iters):
-        loss = compute_loss(y, tx, w)
-        if mse:
-            w = w - gamma * compute_gradient(y, tx, w)
-        else:
-            w = w - gamma * compute_mae_gradient(y, tx, w)
+        loss = compute_loss(y, tx, w, loss_function)
+        w = w - gamma * compute_gradient(y, tx, w, loss_function)
         # store w and loss
         ws.append(w)
         losses.append(loss)
