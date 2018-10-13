@@ -1,7 +1,7 @@
 venv/
 .idea/
 src/__pycache__/
-src/util/__pycache__/
+src/utils/__pycache__/
 .DS_Store
 data/
 README.md
