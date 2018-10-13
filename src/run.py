@@ -11,7 +11,7 @@ default_params = {
     'pca': False,
     'mda': False,
     'results_path': '../results',
-    'raw_data': '../../data',
+    'raw_data': '../data',
     'seed': 123
 }
 tag_params = [
