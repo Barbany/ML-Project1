@@ -3,7 +3,6 @@ import numpy as np
 from utils.helpers import batch_iter
 
 
-
 def compute_mse_loss(y, tx, w):
     """Calculate the mse loss."""
     return 1 / len(y) * sum((y - tx.dot(w)) ** 2)
@@ -24,24 +23,14 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, mse=True):
             loss = compute_mse_loss(y, tx, w)
             # Compute the gradient for mse loss
             grad = -1 / len(y) * tx.transpose().dot(y - tx.dot(w))
-<<<<<<< HEAD
         else:  # MAE
-=======
-        else:  # mae
->>>>>>> 65bae43966043606bf83c20f393effb7bcb9eaed
             loss = compute_mae_loss(y, tx, w)
             # Compute the gradient for mae loss
             grad = -1 / len(y) * tx.transpose().dot([-1 if e <= 0 else 1 for e in (y - tx.dot(w))])
         w = w - gamma * grad
-<<<<<<< HEAD
         print("Gradient Descent({bi}/{ti}): loss={ls}, w0={w0}, w1={w1}".format(
             bi=n_iter, ti=max_iters - 1, ls=loss, w0=w[0], w1=w[1]))
     return w, loss
-=======
-        print("Gradient Descent({bi}/{ti}): loss={l}, w0={w0}, w1={w1}".format(
-            bi=n_iter, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1]))
-    return ws, loss
->>>>>>> 65bae43966043606bf83c20f393effb7bcb9eaed
 
 
 def least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, mse=True):
@@ -52,24 +41,14 @@ def least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, mse=True):
     for minibatch_y, minibatch_tx in batch_iter(y, tx, batch_size, num_batches=max_iters):
         if mse:
             loss = compute_mse_loss(minibatch_y, minibatch_tx, w)
-<<<<<<< HEAD
         else:  # MAE
-=======
-        else:  # mae
->>>>>>> 65bae43966043606bf83c20f393effb7bcb9eaed
             loss = compute_mae_loss(minibatch_y, minibatch_tx, w)
         # Compute a stochastic gradient from just few examples n and their corresponding y_n labels
         stoch_grad = -1 / len(minibatch_y) * minibatch_tx.transpose().dot(minibatch_y - minibatch_tx.dot(w))
         w = w - gamma * stoch_grad
-<<<<<<< HEAD
         print("Stochastic Gradient Descent({bi}/{ti}): loss={ls}, w0={w0}, w1={w1}".format(
             bi=n_iter, ti=max_iters - 1, ls=loss, w0=w[0], w1=w[1]))
     return w, loss
-=======
-        print("Stochastic Gradient Descent({bi}/{ti}): loss={l}, w0={w0}, w1={w1}".format(
-            bi=n_iter, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1]))
-    return ws, loss
->>>>>>> 65bae43966043606bf83c20f393effb7bcb9eaed
 
 
 def least_squares(y, tx):

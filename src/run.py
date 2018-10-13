@@ -1,14 +1,10 @@
 """Main function of the project. Execute it with the appropriate arguments to perform training of a linear model
 with given constraints."""
 
-import argparse
 import os
 import sys
-<<<<<<< HEAD
 import argparse
 from utils.helpers import load_csv_data
-=======
->>>>>>> 65bae43966043606bf83c20f393effb7bcb9eaed
 
 default_params = {
     'verbose': False,
