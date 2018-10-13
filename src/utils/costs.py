@@ -1,4 +1,5 @@
 """Function used to compute the loss."""
+import numpy as np
 
 
 def compute_loss(y, tx, w):
@@ -14,4 +15,4 @@ def compute_mae_loss(y, tx, w):
 
     You can calculate the loss using mse or mae.
     """
-    return 1/len(y)*sum(np.abs(y-tx.dot(w)))
+    return 1 / len(y) * sum(np.abs(y - tx.dot(w)))

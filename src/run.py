@@ -4,7 +4,7 @@ with given constraints."""
 import os
 import sys
 import argparse
-
+from utils.helpers import load_csv_data
 
 default_params = {
     'verbose': False,
@@ -16,7 +16,7 @@ default_params = {
 }
 tag_params = [
     'pca', 'mda'
-    ]
+]
 
 
 def make_tag(params):
@@ -63,11 +63,8 @@ def main(**params):
     verbose = params['verbose']
     # Put all outputs on the log file stored in the result directory
     tee_stdout(os.path.join(results_path, make_tag(params)))
-    print('Hello everyone')
-    print('Look how all print go to the log')
-    if verbose:
-        print('My seed is', seed)
-    print('Hi sofia')
+
+    yb, input_data, ids = load_csv_data(os.path.join(params['raw_data'], 'train.csv'))
 
 
 if __name__ == '__main__':
@@ -75,6 +72,7 @@ if __name__ == '__main__':
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         argument_default=argparse.SUPPRESS
     )
+
 
     def parse_bool(arg):
         arg = arg.lower()
@@ -84,6 +82,7 @@ if __name__ == '__main__':
             return False
         else:
             raise ValueError()
+
 
     parser.add_argument(
         '--pca', type=parse_bool, help='Perform experiment with Principal Component Analysis'
