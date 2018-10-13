@@ -6,7 +6,6 @@ Machine Learning algorithm with own optimization functions to find the Higgs bos
 * [Project Requirements](#project-requirements)
 * [How-To: Execute the Code](#how-to-execute-the-code)
     - [Executing the code from the Terminal](#executing-the-code-from-the-terminal)
-    - [Executing the code from PyCharm](#executing-the-code-from-pycharm)
 * [How-To: Include Functions of other files](#how-to-include-functions-of-other-files)
 * [How-To: Comment Python Code](#how-to-comment-python-code)
 * [How-To: Create Absolute Paths](#how-to-create-absolute-paths)
@@ -41,23 +40,12 @@ Give functions and variables meaningful names both to document their purpose and
 
 Move to the root folder and execute:
 
-    python train.py
+    python run.py
 
 The previous main call can also include several arguments that will condition the experiment and thus lead to different results. If you want to know which variables can be changed with the program call or what they do, execute one of the following two instructions:
 
-    python train.py -h
-    python train.py --help
-
-#### Executing the code from PyCharm
-
-We need to modify the default execution behavior. To do that:
-
-1. Go to `Run -> Edit Configurations`
-2. Click the + icon and select _"Python"_.
-3. Change _"Script path"_ by _"Module name"_ and set it to _"src"_.
-4. Uncheck the _"Show command line afterwards"_ option (if checked).
-
-If you want to execute a test module execute it as you always do. **If it doesn't work tell me**
+    python run.py -h
+    python run.py --help
 
 ## How-To: Include Functions of other files
 
