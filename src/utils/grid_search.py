@@ -1,6 +1,7 @@
 """ Grid Search"""
 
 import numpy as np
+
 from src.utils.costs import compute_loss
 
 

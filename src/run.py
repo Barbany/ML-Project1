@@ -1,10 +1,9 @@
 """Main function of the project. Execute it with the appropriate arguments to perform training of a linear model
 with given constraints."""
 
+import argparse
 import os
 import sys
-import argparse
-
 
 default_params = {
     'verbose': False,
@@ -16,7 +15,7 @@ default_params = {
 }
 tag_params = [
     'pca', 'mda'
-    ]
+]
 
 
 def make_tag(params):
@@ -76,6 +75,7 @@ if __name__ == '__main__':
         argument_default=argparse.SUPPRESS
     )
 
+
     def parse_bool(arg):
         arg = arg.lower()
         if 'true'.startswith(arg):
@@ -84,6 +84,7 @@ if __name__ == '__main__':
             return False
         else:
             raise ValueError()
+
 
     parser.add_argument(
         '--pca', type=parse_bool, help='Perform experiment with Principal Component Analysis'
