@@ -1,12 +1,7 @@
 """function for plot."""
 import matplotlib.pyplot as plt
 import numpy as np
-<<<<<<< HEAD
 from utils.grid_search import get_best_parameters
-=======
-
-from src.utils.grid_search import get_best_parameters
->>>>>>> 65bae43966043606bf83c20f393effb7bcb9eaed
 
 
 def prediction(w0, w1, mean_x, std_x):
