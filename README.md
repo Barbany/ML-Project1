@@ -40,7 +40,7 @@ Give functions and variables meaningful names both to document their purpose and
 
 Move to the root folder and execute:
 
-    python runn.py
+    python run.py
 
 The previous main call can also include several arguments that will condition the experiment and thus lead to different results. If you want to know which variables can be changed with the program call or what they do, execute one of the following two instructions:
 
