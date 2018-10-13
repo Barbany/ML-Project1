@@ -1,15 +1,14 @@
 """Main function of the project. Execute it with the appropriate arguments to perform training of a linear model
 with given constraints."""
 
-# Libraries to deal with files
+# Auxiliary libraries to open files and parse arguments
 import os
 import sys
-
 import argparse
 
 import numpy as np
 
-from utils.helpers import load_csv_data
+from utils.helpers import load_csv_data, predict_labels, create_csv_submission
 from utils.stochastic_gradient_descent import stochastic_gradient_descent
 
 default_params = {
@@ -20,10 +19,13 @@ default_params = {
     'raw_data': '../data',
     'seed': 123,
     'max_iters': 50,
-    'gamma': 0.01,
-    'batch_size': 128,
+    'gamma': 1e-5,
+    'batch_size': 8,
     'bias': True,
-    'loss_function': 'mse'
+    'loss_function': 'mse',
+    'checkpoint': 'last',
+    'save_checkpoint': True,
+    'predict_checkpoint': 'best'
 }
 tag_params = [
     'pca', 'mda', 'bias', 'loss_function'
@@ -43,6 +45,21 @@ def make_tag(params):
         key + '_' + to_string(params[key])
         for key in tag_params
     )
+
+
+def setup_results_dir(params):
+    def ensure_dir_exists(path):
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+    tag = make_tag(params)
+    results_path = os.path.abspath(params['results_path'])
+    ensure_dir_exists(results_path)
+    results_path = os.path.join(results_path, tag)
+    if not os.path.exists(results_path):
+        os.makedirs(results_path)
+
+    return results_path
 
 
 def tee_stdout(log_path):
@@ -70,20 +87,44 @@ def main(**params):
     )
     np.random.seed(params['seed'])
 
-    results_path = params['results_path']
-
     # Put all outputs on the log file stored in the result directory
-    tee_stdout(os.path.join(results_path, make_tag(params)))
+    results_path = setup_results_dir(params)
+    tee_stdout(os.path.join(results_path, 'log'))
 
     yb, input_data, ids = load_csv_data(os.path.join(params['raw_data'], 'train.csv'))
 
     if params['bias']:
         input_data = np.append(np.ones((input_data.shape[0], 1)), input_data, axis=1)
 
-    initial_w = np.random.rand(input_data.shape[0])
-    stochastic_gradient_descent(yb, input_data, initial_w, batch_size=params['batch_size'],
-                                max_iters=params['max_iters'], gamma=params['gamma'],
-                                loss_function=params['loss_function'])
+    checkpoint = [file for file in os.listdir(results_path) if file.startswith(params['checkpoint'])]
+    if not any(checkpoint):
+        initial_w = np.random.rand(input_data.shape[1])
+        print('No checkpoints')
+    else:
+        initial_w = np.load(os.path.join(results_path, checkpoint[0]))
+        print('checkpoint loaded')
+
+    # Train the model. Note that SGD and GD save every weights and loss whilst optimizers in implementations don't
+    losses, ws = stochastic_gradient_descent(yb, input_data, initial_w, batch_size=params['batch_size'],
+                                             max_iters=params['max_iters'], gamma=params['gamma'],
+                                             loss_function=params['loss_function'])
+    """""
+    Save checkpoints. This is only valid for SGD and GD
+    np.save(os.path.join(results_path, 'last-it' + str(params['max_iters']) + '-loss' +
+                         '{:.2f}'.format(losses[-1]) + '.npy'), ws[-1])
+    best_iteration = np.argmin(losses)
+    np.save(os.path.join(results_path, 'best-it' + str(best_iteration) + '-loss' +
+                         '{:.2f}'.format(losses[best_iteration]) + '.npy'), ws[best_iteration])"""""
+
+    _, test_data, test_ids = load_csv_data(os.path.join(params['raw_data'], 'test.csv'))
+    if params['bias']:
+        test_data = np.append(np.ones((test_data.shape[0], 1)), test_data, axis=1)
+
+    # predicting_weights = [file for file in os.listdir(results_path) if file.startswith(params['predict_checkpoint'])]
+    # y_pred = predict_labels(np.load(os.path.join(results_path, predicting_weights)), test_data)
+
+    y_pred = predict_labels(ws[-1], test_data)
+    create_csv_submission(test_ids, y_pred, results_path + '/results.csv')
 
 
 if __name__ == '__main__':
