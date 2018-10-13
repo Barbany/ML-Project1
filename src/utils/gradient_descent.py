@@ -1,6 +1,6 @@
 """Gradient Descent"""
 
-from src.utils.costs import compute_loss
+from utils.costs import compute_loss
 
 
 def compute_gradient(y, tx, w):
