@@ -4,5 +4,4 @@ src/__pycache__/
 src/utils/__pycache__/
 .DS_Store
 data/
-README.md
-src/utils/__pycache__/helpers.cpython-36.pyc
+src/trials/
