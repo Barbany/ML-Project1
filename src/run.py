@@ -9,7 +9,7 @@ import argparse
 import numpy as np
 
 from utils.helpers import load_csv_data, predict_labels, create_csv_submission
-from utils.stochastic_gradient_descent import stochastic_gradient_descent
+from utils.implementations import least_squares_sgd
 
 default_params = {
     'verbose': False,
@@ -105,9 +105,9 @@ def main(**params):
         print('checkpoint loaded')
 
     # Train the model. Note that SGD and GD save every weights and loss whilst optimizers in implementations don't
-    losses, ws = stochastic_gradient_descent(yb, input_data, initial_w, batch_size=params['batch_size'],
-                                             max_iters=params['max_iters'], gamma=params['gamma'],
-                                             loss_function=params['loss_function'])
+    losses, ws = least_squares_sgd(yb, input_data, initial_w, batch_size=params['batch_size'],
+                                   max_iters=params['max_iters'], gamma=params['gamma'],
+                                   loss_function=params['loss_function'])
     """""
     Save checkpoints. This is only valid for SGD and GD
     np.save(os.path.join(results_path, 'last-it' + str(params['max_iters']) + '-loss' +
