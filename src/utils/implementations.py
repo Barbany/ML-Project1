@@ -1,67 +1,34 @@
 """Implementation of the methods seen in class and in the labs"""
 
 import numpy as np
-import os
 
 from utils.helpers import batch_iter
 from utils.costs import compute_loss, compute_gradient
 
 
-def least_squares_gd(y, tx, initial_w, max_iters, gamma, results_path, loss_function='mse', checkpoint=True):
+def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse'):
     """Gradient descent algorithm."""
     # Define parameters to store w and loss
     w = initial_w
     loss = None
-    min_loss = 1e5
     for n_iter in range(max_iters):
         loss = compute_loss(y, tx, w, loss_function)
         # Compute the gradient for mse loss
-        grad = compute_gradient(y, tx, w, loss_function)
-        w = w - gamma * grad
-        if checkpoint:
-            if loss < min_loss:
-                for file in os.listdir(results_path):
-                    if file.startswith('best'):
-                        os.remove(os.path.join(results_path, file))
-                np.save(os.path.join(results_path, 'best-it' + str(n_iter) + '-loss' + '{:.2f}'.format(loss) + '.npy'),
-                        w)
-                min_loss = loss
-            else:
-                for file in os.listdir(results_path):
-                    if file.startswith('last'):
-                        os.remove(os.path.join(results_path, file))
-                np.save(os.path.join(results_path, 'last-it' + str(n_iter) + '-loss' +
-                                     '{:.2f}'.format(loss) + '.npy'),  w)
+        w = w - gamma * compute_gradient(y, tx, w, loss_function)
         print("Gradient Descent({bi}/{ti}): loss={ls}, w0={w0}, w1={w1}".format(
             bi=n_iter, ti=max_iters - 1, ls=loss, w0=w[0], w1=w[1]))
     return w, loss
 
 
-def least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, results_path,
-                      loss_function='mse', checkpoint=True):
+def least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, loss_function='mse'):
     """Stochastic gradient descent algorithm."""
     w = initial_w
     n_iter = 0
     loss = None
-    min_loss = 1e5
     for minibatch_y, minibatch_tx in batch_iter(y, tx, batch_size, num_batches=max_iters):
         loss = compute_loss(minibatch_y, minibatch_tx, w, loss_function)
         # Compute a stochastic gradient from just few examples n and their corresponding y_n labels
         w = w - gamma * compute_gradient(minibatch_y, minibatch_tx, w, loss_function)
-        if checkpoint:
-            if loss < min_loss:
-                for file in os.listdir(results_path):
-                    if file.startswith('best'):
-                        os.remove(os.path.join(results_path, file))
-                np.save(os.path.join(results_path, 'best-it' + str(n_iter) + '-loss' + '{:.2f}'.format(loss) + '.npy'),
-                        w)
-                min_loss = loss
-            else:
-                for file in os.listdir(results_path):
-                    if file.startswith('last'):
-                        os.remove(os.path.join(results_path, file))
-                np.save(os.path.join(results_path, 'last-it' + str(n_iter) + '-loss' +
-                                     '{:.2f}'.format(loss) + '.npy'),  w)
         print("Stochastic Gradient Descent({bi}/{ti}): loss={ls}, w0={w0}, w1={w1}".format(
             bi=n_iter, ti=max_iters - 1, ls=loss, w0=w[0], w1=w[1]))
     return w, loss
