@@ -8,13 +8,13 @@ import argparse
 
 import numpy as np
 
-from utils.helpers import load_csv_data, predict_labels, create_csv_submission
+from utils.helpers import predict_labels, create_csv_submission, load_csv_data
+from preproc.data_clean import pca, load_csv_data_no_na
 from utils.implementations import least_squares_sgd
 
 default_params = {
     'verbose': False,
-    'pca': False,
-    'mda': False,
+    'pca': True,
     'results_path': '../results',
     'raw_data': '../data',
     'seed': 123,
@@ -22,13 +22,10 @@ default_params = {
     'gamma': 1e-5,
     'batch_size': 8,
     'bias': True,
-    'loss_function': 'mse',
-    'checkpoint': 'last',
-    'save_checkpoint': True,
-    'predict_checkpoint': 'best'
+    'loss_function': 'mse'
 }
 tag_params = [
-    'pca', 'mda', 'bias', 'loss_function'
+    'pca', 'bias', 'loss_function'
 ]
 
 
@@ -91,39 +88,36 @@ def main(**params):
     results_path = setup_results_dir(params)
     tee_stdout(os.path.join(results_path, 'log'))
 
-    yb, input_data, ids = load_csv_data(os.path.join(params['raw_data'], 'train.csv'))
-
-    if params['bias']:
-        input_data = np.append(np.ones((input_data.shape[0], 1)), input_data, axis=1)
-
-    checkpoint = [file for file in os.listdir(results_path) if file.startswith(params['checkpoint'])]
-    if not any(checkpoint):
-        initial_w = np.random.rand(input_data.shape[1])
-        print('No checkpoints')
+    npy_file = os.path.join(results_path, 'processed_data.npz')
+    if os.path.isfile(npy_file):
+        data = np.load(npy_file)
+        yb = data['yb']
+        input_data = data['input_data']
     else:
-        initial_w = np.load(os.path.join(results_path, checkpoint[0]))
-        print('checkpoint loaded')
+        if params['pca']:
+            yb, input_data, _ = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
+            input_data = pca(input_data)
+            np.savez(npy_file, yb=yb, input_data=input_data)
+
+        else:
+            yb, input_data, ids = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
+
+        if params['bias']:
+            input_data = np.append(np.ones((input_data.shape[0], 1)), input_data, axis=1)
+
+    # Could we improve by initializing with other configurations? E.g. random
+    initial_w = np.zeros(input_data.shape[1])
 
     # Train the model. Note that SGD and GD save every weights and loss whilst optimizers in implementations don't
-    losses, ws = least_squares_sgd(yb, input_data, initial_w, batch_size=params['batch_size'],
-                                   max_iters=params['max_iters'], gamma=params['gamma'],
-                                   loss_function=params['loss_function'])
-    """""
-    Save checkpoints. This is only valid for SGD and GD
-    np.save(os.path.join(results_path, 'last-it' + str(params['max_iters']) + '-loss' +
-                         '{:.2f}'.format(losses[-1]) + '.npy'), ws[-1])
-    best_iteration = np.argmin(losses)
-    np.save(os.path.join(results_path, 'best-it' + str(best_iteration) + '-loss' +
-                         '{:.2f}'.format(losses[best_iteration]) + '.npy'), ws[best_iteration])"""""
+    w, loss = least_squares_sgd(yb, input_data, initial_w, batch_size=params['batch_size'],
+                                max_iters=params['max_iters'], gamma=params['gamma'],
+                                loss_function=params['loss_function'])
 
     _, test_data, test_ids = load_csv_data(os.path.join(params['raw_data'], 'test.csv'))
     if params['bias']:
         test_data = np.append(np.ones((test_data.shape[0], 1)), test_data, axis=1)
 
-    # predicting_weights = [file for file in os.listdir(results_path) if file.startswith(params['predict_checkpoint'])]
-    # y_pred = predict_labels(np.load(os.path.join(results_path, predicting_weights)), test_data)
-
-    y_pred = predict_labels(ws[-1], test_data)
+    y_pred = predict_labels(w, test_data)
     create_csv_submission(test_ids, y_pred, results_path + '/results.csv')
 
 
@@ -146,9 +140,6 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--pca', type=parse_bool, help='Perform experiment with Principal Component Analysis'
-    )
-    parser.add_argument(
-        '--mda', type=parse_bool, help='Perform experiment with Multiple Discriminant Analysis'
     )
     parser.add_argument(
         '--verbose', type=parse_bool,
