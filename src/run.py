@@ -1,13 +1,12 @@
 """Main function of the project. Execute it with the appropriate arguments to perform training of a linear model
 with given constraints."""
 
+import argparse
 # Auxiliary libraries to open files and parse arguments
 import os
 import sys
-import argparse
 
 import numpy as np
-
 from utils.helpers import load_csv_data, predict_labels, create_csv_submission
 from utils.implementations import least_squares_sgd
 
@@ -107,6 +106,7 @@ def main(**params):
     # Train the model. Note that SGD and GD save every weights and loss whilst optimizers in implementations don't
     losses, ws = least_squares_sgd(yb, input_data, initial_w, batch_size=params['batch_size'],
                                    max_iters=params['max_iters'], gamma=params['gamma'],
+                                   results_path=params['results_path'],
                                    loss_function=params['loss_function'])
     """""
     Save checkpoints. This is only valid for SGD and GD
