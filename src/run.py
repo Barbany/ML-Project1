@@ -8,7 +8,7 @@ import argparse
 
 import numpy as np
 
-from utils.helpers import predict_labels, create_csv_submission, load_csv_data
+from utils.helpers import predict_labels, create_csv_submission, load_csv_data, standardize
 from preproc.data_clean import pca, load_csv_data_no_na
 from utils.implementations import least_squares_sgd
 
@@ -93,17 +93,24 @@ def main(**params):
         data = np.load(npy_file)
         yb = data['yb']
         input_data = data['input_data']
+        remaining_cols = data['remaining_cols']
+        if params['pca']:
+            w_mat = data['w_mat']
+        else:
+            w_mat = np.nan
     else:
         if params['pca']:
-            yb, input_data, _ = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
-            input_data = pca(input_data)
-            np.savez(npy_file, yb=yb, input_data=input_data)
-
+            yb, input_data, _, remaining_cols = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
+            input_data, w_mat = pca(input_data)
         else:
-            yb, input_data, ids = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
+            yb, input_data, _, remaining_cols = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
+            w_mat = np.nan
+            input_data = standardize(input_data)
 
         if params['bias']:
             input_data = np.append(np.ones((input_data.shape[0], 1)), input_data, axis=1)
+
+        np.savez(npy_file, yb=yb, input_data=input_data, w_mat=w_mat, remaining_cols=remaining_cols)
 
     # Could we improve by initializing with other configurations? E.g. random
     initial_w = np.zeros(input_data.shape[1])
@@ -114,6 +121,12 @@ def main(**params):
                                 loss_function=params['loss_function'])
 
     _, test_data, test_ids = load_csv_data(os.path.join(params['raw_data'], 'test.csv'))
+    test_data = test_data[:, remaining_cols]
+    test_data, _, _ = standardize(test_data)
+
+    if params['pca']:
+        test_data = test_data.dot(w_mat.T)
+
     if params['bias']:
         test_data = np.append(np.ones((test_data.shape[0], 1)), test_data, axis=1)
 
