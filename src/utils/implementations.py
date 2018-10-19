@@ -38,12 +38,14 @@ def least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, loss_funct
 
 def least_squares(y, tx):
     """Least squares algorithm."""
-    a = np.linalg.inv(np.dot(np.transpose(tx), tx))
-    return np.matmul(a, np.dot(np.transpose(tx), y))
+    a = tx.T.dot(tx)
+    b = tx.T.dot(y)
+    return np.linalg.solve(a, b)
 
 
 def ridge_regression(y, tx, lambda_):
     """Ridge regression."""
-    mat = np.dot(np.transpose(tx), tx)
-    a = np.linalg.inv(mat + lambda_ * np.ones((mat.shape[0], mat.shape[1])))
-    return np.matmul(a, np.dot(np.transpose(tx), y))
+    aI = lambda_ * np.identity(tx.shape[1])
+    a = tx.T.dot(tx) + aI
+    b = tx.T.dot(y)
+    return np.linalg.solve(a, b)
