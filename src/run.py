@@ -8,8 +8,8 @@ import argparse
 
 import numpy as np
 
-from utils.helpers import predict_labels, create_csv_submission, load_csv_data, standardize
-from preproc.data_clean import pca, load_csv_data_no_na, correlation_coefficient
+from utils.helpers import predict_labels, create_csv_submission, standardize
+from preproc.data_clean import pca, load_csv_data_no_na, correlation_coefficient, load_csv_split_jet
 from utils.implementations import least_squares_sgd
 
 default_params = {
@@ -23,10 +23,11 @@ default_params = {
     'gamma': 1e-5,
     'batch_size': 8,
     'bias': True,
-    'loss_function': 'mse'
+    'split_jet': False,
+    'loss_function': 'logistic'
 }
 tag_params = [
-    'pca', 'bias', 'loss_function'
+    'pca', 'bias', 'loss_function', 'split_jet'
 ]
 
 
@@ -94,26 +95,31 @@ def main(**params):
         data = np.load(npy_file)
         yb = data['yb']
         input_data = data['input_data']
-        remaining_cols = data['remaining_cols']
-        if params['pca']:
-            w_mat = data['w_mat']
-        else:
-            w_mat = np.nan
+        test_data = data['test_data']
+        test_ids = data['test_ids']
     else:
-        yb, input_data, _, remaining_cols = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
+        if params['split_jet']:
+            yb, input_data, _, _, test_data, test_ids = load_csv_split_jet(
+                os.path.join(params['raw_data'], 'train.csv'),
+                os.path.join(params['raw_data'], 'test.csv'))
+        else:
+            yb, input_data, _, _, test_data, test_ids = load_csv_data_no_na(
+                os.path.join(params['raw_data'], 'train.csv'),
+                os.path.join(params['raw_data'], 'test.csv'))
         if params['correlation']:
             input_data = correlation_coefficient(input_data)
 
         if params['pca']:
-            input_data, w_mat = pca(input_data)
+            input_data, test_data = pca(input_data, test_data)
         else:
-            w_mat = np.nan
-            input_data = standardize(input_data)
+            input_data, _, _ = standardize(input_data)
+            test_data, _, _ = standardize(test_data)
 
         if params['bias']:
             input_data = np.append(np.ones((input_data.shape[0], 1)), input_data, axis=1)
+            test_data = np.append(np.ones((test_data.shape[0], 1)), test_data, axis=1)
 
-        np.savez(npy_file, yb=yb, input_data=input_data, w_mat=w_mat, remaining_cols=remaining_cols)
+        np.savez(npy_file, yb=yb, input_data=input_data, test_data=test_data, test_ids=test_ids)
 
     # Could we improve by initializing with other configurations? E.g. random
     initial_w = np.zeros(input_data.shape[1])
@@ -122,16 +128,6 @@ def main(**params):
     w, loss = least_squares_sgd(yb, input_data, initial_w, batch_size=params['batch_size'],
                                 max_iters=params['max_iters'], gamma=params['gamma'],
                                 loss_function=params['loss_function'])
-
-    _, test_data, test_ids = load_csv_data(os.path.join(params['raw_data'], 'test.csv'))
-    test_data = test_data[:, remaining_cols]
-    test_data, _, _ = standardize(test_data)
-
-    if params['pca']:
-        test_data = test_data.dot(w_mat.T)
-
-    if params['bias']:
-        test_data = np.append(np.ones((test_data.shape[0], 1)), test_data, axis=1)
 
     y_pred = predict_labels(w, test_data)
     create_csv_submission(test_ids, y_pred, results_path + '/results.csv')
@@ -168,7 +164,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--max_iterations', type=int,
-        help='Maximum number of iterations of the SGD algorithm'
+        help='Maximum number of iterations of the Gradient Descent algorithm'
     )
     parser.add_argument(
         '--batch_size', type=int,

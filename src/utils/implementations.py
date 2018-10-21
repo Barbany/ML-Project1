@@ -90,7 +90,7 @@ def ridge_regression(y, tx, lambda_):
     """
     a = np.dot(np.transpose(tx), tx) + 2*tx.shape[0]*lambda_*np.identity(tx.shape[1])
     b = np.dot(np.transpose(tx), y)
-    return np.linalg.solve(a,b)
+    return np.linalg.solve(a, b)
 
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma, batch_size=None):
@@ -128,4 +128,3 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma, batch_s
     else:
         return least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma,
                                  loss_function='logistic', lambda_=lambda_)
-
