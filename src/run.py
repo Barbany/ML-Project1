@@ -10,7 +10,7 @@ import numpy as np
 
 from utils.helpers import predict_labels, create_csv_submission, standardize
 from preproc.data_clean import pca, load_csv_data_no_na, correlation_coefficient, load_csv_split_jet
-from utils.implementations import least_squares_sgd
+from ml_methods.implementations import least_squares_sgd
 
 default_params = {
     'verbose': False,
