@@ -29,6 +29,12 @@ def compute_gradient(y, tx, w, loss_function='mse', lambda_=0):
     """Compute a stochastic gradient from just few examples n and
     their corresponding y_n labels.
 
+    :param y: labels
+    :param tx: features
+    :param w: weights
+    :param loss_function: Loss function, possibilities specified below
+    :param lambda_: Regularizer factor
+
     The possible loss functions are:
         * MSE (By default)
         * MAE
