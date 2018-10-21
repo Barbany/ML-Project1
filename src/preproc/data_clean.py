@@ -6,50 +6,87 @@ import time
 from utils.helpers import load_csv_data, standardize
 
 
-def load_csv_data_no_na(db_path, na_indicator=-999, verbose=False):
+def load_csv_data_no_na(train_path, test_path, na_indicator=-999, verbose=False):
     """
     Load raw data and eliminate NAs indicated with a certain numeric value
     Returns data without the contaminated features
-    :param db_path: Path of the raw data
+    :param train_path: Path of the training raw data
+    :param test_path: Path of the training raw data
     :param na_indicator: Numeric NA Indicator (optional). Default value = -999
     :param verbose: Print number of NANs for each feature (optional). Default value = False
-    :return: labels, features, ids, remaining_cols (Binary vector ; Remember to apply to test data)
+    :return: labels_tr, features_tr, ids_tr, labels_te, features_te, ids_te
     """
     # Load RAW data
-    yb, input_data, ids = load_csv_data(db_path)
+    yb_tr, input_data_tr, ids_tr = load_csv_data(train_path)
+    yb_te, input_data_te, ids_te = load_csv_data(test_path)
 
     # Label NANs with numpy built-in indicator
-    input_data[input_data == na_indicator] = np.nan
+    input_data_tr[input_data_tr == na_indicator] = np.nan
 
     if verbose:
-        for feature in range(input_data.shape[1]):
+        for feature in range(input_data_tr.shape[1]):
             print('Feature #', feature, ' has \t',
-                  '{0:.2f}'.format(np.count_nonzero(np.isnan(input_data[:, feature]))/len(input_data[:, feature])*100),
-                  '% NANs')
+                  '{0:.2f}'.format(np.count_nonzero(np.isnan(input_data_tr[:, feature]))
+                                   / len(input_data_tr[:, feature]) * 100), '% NANs')
 
     # Eliminate all features with 1 or more NANs
     # We could also try to only eliminate those over a given threshold (e.g. 20%)
-    remaining_cols = ~np.any(np.isnan(input_data), axis=0)
-    input_data = input_data[:, remaining_cols]
-    return yb, input_data, ids, remaining_cols
+    remaining_cols = ~np.any(np.isnan(input_data_tr), axis=0)
+
+    input_data_tr = input_data_tr[:, remaining_cols]
+    input_data_te = input_data_te[:, remaining_cols]
+    return yb_tr, input_data_tr, ids_tr, yb_te, input_data_te, ids_te
 
 
-def pca(features, threshold=1e-4, verbose=False):
+def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False):
+    """
+    Load raw data by splitting depending on the 'PRI_jet_num', which determines the existence of some
+    other features according to the explanation of the dataset included in
+    'doc/[Background of dataset] - The Higgs Boson.pdf'. See highlighted lines p. 15 (Appendix B)
+
+    :param train_path: Path of the training raw data
+    :param test_path: Path of the training raw data
+    :param na_indicator: Numeric NA Indicator (optional). Default value = -999
+    :param verbose: Print number of NANs for each feature (optional). Default value = False
+    :return: labels_tr, features_tr, ids_tr, labels_te, features_te, ids_te
+    """
+    # Load RAW data
+    yb_tr, input_data_tr, ids_tr = load_csv_data(train_path)
+    yb_te, input_data_te, ids_te = load_csv_data(test_path)
+
+    # Label NANs with numpy built-in indicator
+    input_data_tr[input_data_tr == na_indicator] = np.nan
+
+    if verbose:
+        for feature in range(input_data_tr.shape[1]):
+            print('Feature #', feature, ' has \t',
+                  '{0:.2f}'.format(np.count_nonzero(np.isnan(input_data_tr[:, feature]))
+                                   / len(input_data_tr[:, feature]) * 100), '% NANs')
+
+    # Eliminate all features with 1 or more NANs
+    # We could also try to only eliminate those over a given threshold (e.g. 20%)
+    remaining_cols = ~np.any(np.isnan(input_data_tr), axis=0)
+
+    input_data_tr = input_data_tr[:, remaining_cols]
+    input_data_te = input_data_te[:, remaining_cols]
+    return yb_tr, input_data_tr, ids_tr, yb_te, input_data_te, ids_te
+
+
+def pca(features_tr, features_te, threshold=1e-4, verbose=False):
     """
     Perform a PCA transformation to only keep the most relevant features given a certain threshold
-    :param features: Matrix of features (input_data output argument of load_csv_data_no_na). Shape = (x, num_features)
+    :param features_tr: Matrix of train features. Shape = (-1, num_features)
+    :param features_te: Matrix of test features. Shape = (-1, num_features)
     :param threshold: Minimum ratio between a given eigenvalue and the sum of all eigenvalues to keep the associated
     eigenvector in the transformation matrix (optional). Default value = 1e-4 (0.01%)
     :param verbose: Print information of each eigenvalue and its percentage of contribution
-    :return: transformed_features (Shape = (x, num_new_features) Note that num_new_features <= num_features),
-    w_mat (Transformation matrix : Remember to apply to test data with the expression features.dot(w_mat.T) with
-    previous z-score normalization)
+    :return: transformed_features (Shape = (x, num_new_features) Note that num_new_features <= num_features)
     """
     # z-score normalisation
-    features, _, _ = standardize(features)
+    features_tr, _, _ = standardize(features_tr)
 
     # Compute eigenvalues and eigenvectors with covariance matrix
-    eig_val_cov, eig_vec_cov = np.linalg.eig(np.cov(features.T))
+    eig_val_cov, eig_vec_cov = np.linalg.eig(np.cov(features_tr.T))
     sum_eig_cov = np.sum(eig_val_cov)
 
     # Pair eigenvalues with the associated eigenvectors and sort them in decreasing order of eigenvalues
@@ -60,20 +97,22 @@ def pca(features, threshold=1e-4, verbose=False):
         # Print eigenvalues and its percentage of contribution
         for i in eig_pairs_cov:
             print('%.2f' % (i[0] * 100 / sum_eig_cov), '%')
-        print('-'*30)
+        print('-' * 30)
 
     # Take those eigenvectors with associated eigenvalues with more than 'threshold' of contribution compared
     # to the sum of all eigenvalues for the transformation matrix
-    w_mat = np.asarray([i[1] for i in eig_pairs_cov if i[0] > sum_eig_cov*threshold])
+    w_mat = np.asarray([i[1] for i in eig_pairs_cov if i[0] > sum_eig_cov * threshold])
 
     # Return transformed data
-    return features.dot(w_mat.T), w_mat
+    return features_tr.dot(w_mat.T), features_te.dot(w_mat.T)
 
-def correlation_coefficient(features, threshold = 0.9, visualize = False):
+
+def correlation_coefficient(features, threshold=0.9, visualize=False):
     """
         Finds the Pearson correlation coefficients between the features.
         High correlated features imply that the features are highly linked, so one of them is removed.
-        :param features: Matrix of features (input_data output argument of load_csv_data_no_na). Shape = (x, num_features)
+        :param features: Matrix of features (input_data output argument of load_csv_data_no_na).
+               Shape = (x, num_features)
         :param threshold: Minimum correlation. Features with correlation above the threshold will be removed.
                           Default value = 0.9
         :param visualize: Print information of each eigenvalue and its percentage of contribution
@@ -104,7 +143,7 @@ def correlation_coefficient(features, threshold = 0.9, visualize = False):
         plt.xticks(rotation=90)
 
         timestr = time.strftime("%d.%m.%Y-%H:%M:%S")
-        plt.savefig('correlation_coefficient_' + timestr +'.png')
+        plt.savefig('correlation_coefficient_' + timestr + '.png')
         plt.show()
 
     return uncorrelated_features
