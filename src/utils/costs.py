@@ -19,7 +19,7 @@ def compute_loss(y, tx, w, loss_function='mse', lambda_=0):
     """
     return lambda_ * np.linalg.norm(w) ** 2 + {
         'mse': 1 / (2 * len(y)) * sum((y - tx.dot(w)) ** 2),
-        'rmse': np.sqrt(2 * compute_loss(y, tx, w)),
+        'rmse': np.sqrt(2 * compute_loss(y, tx, w, 'mse', lambda_)),
         'mae': 1 / len(y) * sum(np.abs(y - tx.dot(w))),
         'logistic': np.sum(np.log(1. + np.exp(np.dot(tx, w)))) - np.dot(y.transpose(), np.dot(tx, w))
     }[loss_function]
