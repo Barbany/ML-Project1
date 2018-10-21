@@ -17,11 +17,12 @@ def compute_loss(y, tx, w, loss_function='mse', lambda_=0):
         * RMSE (Root MSE)
         * Logistic
     """
-    return lambda_ * np.linalg.norm(w) ** 2 + {
-        'mse': 1 / (2 * len(y)) * sum((y - tx.dot(w)) ** 2),
-        'rmse': np.sqrt(2 * compute_loss(y, tx, w, 'mse', lambda_)),
-        'mae': 1 / len(y) * sum(np.abs(y - tx.dot(w))),
-        'logistic': np.sum(np.log(1. + np.exp(np.dot(tx, w)))) - np.dot(y.transpose(), np.dot(tx, w))
+    return {
+        'mse': 1 / (2 * len(y)) * sum((y - tx.dot(w)) ** 2) + lambda_ * np.linalg.norm(w) ** 2,
+        'rmse': 1 / (len(y)) * np.abs(sum((y - tx.dot(w)))) + lambda_ * np.linalg.norm(w) ** 2,
+        'mae': 1 / len(y) * sum(np.abs(y - tx.dot(w))) + lambda_ * np.linalg.norm(w) ** 2,
+        'logistic': np.sum(np.log(1. + np.exp(np.dot(tx, w)))) - np.dot(y.transpose(), np.dot(tx, w)) +
+                    lambda_ * np.linalg.norm(w) ** 2
     }[loss_function]
 
 
@@ -41,11 +42,12 @@ def compute_gradient(y, tx, w, loss_function='mse', lambda_=0):
         * RMSE (Root MSE)
         * Logistic
     """
-    return 2 * lambda_ * w + {
-        'mse': -1 / len(y) * tx.transpose().dot(y - tx.dot(w)),
-        'rmse': np.sqrt(len(y)) * compute_gradient(y, tx, w, 'mae'),
-        'mae': -1 / len(y) * tx.transpose().dot([-1 if e <= 0 else 1 for e in (y - tx.dot(w))]),
-        'logistic': np.dot(tx.transpose(), sigmoid(np.dot(tx, w)) - y)
+    return {
+        'mse': -1 / len(y) * tx.transpose().dot(y - tx.dot(w)) + 2 * lambda_ * w,
+        'rmse': -1 / np.sqrt(len(y)) * tx.transpose().dot([-1 if e <= 0 else 1 for e in (y - tx.dot(w))])
+                + 2 * lambda_ * w,
+        'mae': -1 / len(y) * tx.transpose().dot([-1 if e <= 0 else 1 for e in (y - tx.dot(w))]) + 2 * lambda_ * w,
+        'logistic': np.dot(tx.transpose(), sigmoid(np.dot(tx, w)) - y) + 2 * lambda_ * w
     }[loss_function]
 
 
