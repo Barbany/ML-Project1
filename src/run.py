@@ -9,13 +9,12 @@ import argparse
 import numpy as np
 
 from utils.helpers import predict_labels, create_csv_submission, load_csv_data, standardize
-from preproc.data_clean import pca, load_csv_data_no_na, correlation_coefficient
+from preproc.data_clean import pca, load_csv_data_no_na
 from utils.implementations import least_squares_sgd
 
 default_params = {
     'verbose': False,
     'pca': True,
-    'correlation': False,
     'results_path': '../results',
     'raw_data': '../data',
     'seed': 123,
@@ -100,13 +99,11 @@ def main(**params):
         else:
             w_mat = np.nan
     else:
-        yb, input_data, _, remaining_cols = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
-        if params['correlation']:
-            input_data = correlation_coefficient(input_data)
-
         if params['pca']:
+            yb, input_data, _, remaining_cols = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
             input_data, w_mat = pca(input_data)
         else:
+            yb, input_data, _, remaining_cols = load_csv_data_no_na(os.path.join(params['raw_data'], 'train.csv'))
             w_mat = np.nan
             input_data = standardize(input_data)
 
