@@ -38,8 +38,8 @@ def load_csv_data_no_na(train_path, test_path, na_indicator=-999, verbose=False)
     return yb_tr, input_data_tr, ids_tr, yb_te, input_data_te, ids_te
 
 
-def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False):
-    """
+def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False, categorical_col=22):
+    """"
     Load raw data by splitting depending on the 'PRI_jet_num', which determines the existence of some
     other features according to the explanation of the dataset included in
     'doc/[Background of dataset] - The Higgs Boson.pdf'. See highlighted lines p. 15 (Appendix B)
@@ -48,28 +48,73 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False):
     :param test_path: Path of the training raw data
     :param na_indicator: Numeric NA Indicator (optional). Default value = -999
     :param verbose: Print number of NANs for each feature (optional). Default value = False
+    :param categorical_col: Number of column where the categorical feature, in this case Jet, conditions the others
     :return: labels_tr, features_tr, ids_tr, labels_te, features_te, ids_te
+    (All output variables are lists where each element is a the labels, features and IDs of a given jet)
     """
+
     # Load RAW data
     yb_tr, input_data_tr, ids_tr = load_csv_data(train_path)
     yb_te, input_data_te, ids_te = load_csv_data(test_path)
-
-    # Label NANs with numpy built-in indicator
-    input_data_tr[input_data_tr == na_indicator] = np.nan
-
     if verbose:
-        for feature in range(input_data_tr.shape[1]):
-            print('Feature #', feature, ' has \t',
-                  '{0:.2f}'.format(np.count_nonzero(np.isnan(input_data_tr[:, feature]))
-                                   / len(input_data_tr[:, feature]) * 100), '% NANs')
+        print('Train and test data successfully loaded')
 
-    # Eliminate all features with 1 or more NANs
-    # We could also try to only eliminate those over a given threshold (e.g. 20%)
-    remaining_cols = ~np.any(np.isnan(input_data_tr), axis=0)
+    # Filter data for every different jet and append it to a list
+    num_jets = np.unique(input_data_tr[:, categorical_col])
 
-    input_data_tr = input_data_tr[:, remaining_cols]
-    input_data_te = input_data_te[:, remaining_cols]
-    return yb_tr, input_data_tr, ids_tr, yb_te, input_data_te, ids_te
+    yb_jets_tr = tx_jets_tr = ids_jets_tr = []
+    yb_jets_te = tx_jets_te = ids_jets_te = []
+
+    for jet in num_jets:
+        if verbose:
+            print("Creating data for jet ", jet)
+
+        # Get indexes of data points with the same jet
+        idx_tr = input_data_tr[:, categorical_col] == jet
+        idx_te = input_data_te[:, categorical_col] == jet
+
+        # Filter labels, features and IDs by jet
+        y_tr = yb_tr[idx_tr]
+        tx_tr = input_data_tr[idx_tr]
+        id_tr = ids_tr[idx_tr]
+
+        y_te = yb_te[idx_te]
+        tx_te = input_data_te[idx_te]
+        id_te = ids_te[idx_te]
+
+        # Delete PRI_jet_num feature
+        tx_tr = np.delete(tx_tr, categorical_col, axis=1)
+        tx_te = np.delete(tx_te, categorical_col, axis=1)
+
+        # Label NANs with numpy built-in indicator
+        input_data_tr[input_data_tr == na_indicator] = np.nan
+
+        # Only keep columns without NANs
+        remaining_cols = ~np.any(np.isnan(input_data_tr), axis=0)
+
+        tx_tr = tx_tr[remaining_cols]
+        tx_te = tx_te[remaining_cols]
+
+        # For Jet 0, there is a really big outlier in the column 3. So, we will remove it
+        if jet == 0:
+            to_remove = (tx_tr[:, 3] < 200)
+            tx_tr = tx_tr[to_remove, :]
+            y_tr = y_tr[to_remove]
+            ids_tr = ids_tr[to_remove]
+
+            # Remove last column (only 0s)
+            tx_tr = tx_tr[:, :tx_tr.shape[1] - 1]
+
+        # Append every filtered matrix into the list
+        yb_jets_tr.append(tx_tr)
+        tx_jets_tr.append(tx_tr)
+        ids_jets_tr.append(ids_tr)
+
+        yb_jets_te.append(tx_te)
+        tx_jets_te.append(tx_te)
+        ids_jets_te.append(ids_te)
+
+    return yb_jets_tr, tx_jets_tr, ids_jets_tr, yb_jets_te, tx_jets_te, ids_jets_te
 
 
 def pca(features_tr, features_te, threshold=1e-4, verbose=False):
