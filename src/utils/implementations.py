@@ -88,9 +88,9 @@ def ridge_regression(y, tx, lambda_):
     :param lambda_: Regularizer factor
     :return: w, loss (Last weights and loss)
     """
-    a = tx.T.dot(tx) + lambda_ * np.identity(tx.shape[1])
-    b = tx.T.dot(y)
-    return np.linalg.solve(a, b)
+    a = np.dot(np.transpose(tx), tx) + 2*tx.shape[0]*lambda_*np.identity(tx.shape[1])
+    b = np.dot(np.transpose(tx), y)
+    return np.linalg.solve(a,b)
 
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma, batch_size=None):
