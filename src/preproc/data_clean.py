@@ -82,18 +82,17 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False, 
         tx_te = input_data_te[idx_te]
         id_te = ids_te[idx_te]
 
-        # Delete PRI_jet_num feature
-        tx_tr = np.delete(tx_tr, categorical_col, axis=1)
-        tx_te = np.delete(tx_te, categorical_col, axis=1)
-
         # Label NANs with numpy built-in indicator
-        input_data_tr[input_data_tr == na_indicator] = np.nan
+        tx_tr[tx_tr == na_indicator] = np.nan
 
         # Only keep columns without NANs
-        remaining_cols = ~np.any(np.isnan(input_data_tr), axis=0)
+        remaining_cols = ~np.any(np.isnan(tx_tr), axis=0)
+        # Delete PRI_jet_num feature
+        remaining_cols[categorical_col] = False
 
-        tx_tr = tx_tr[remaining_cols]
-        tx_te = tx_te[remaining_cols]
+        # Delete features with NANs
+        tx_tr = tx_tr[:, remaining_cols]
+        tx_te = tx_te[:, remaining_cols]
 
         # For Jet 0, there is a really big outlier in the column 3. So, we will remove it
         if jet == 0:
@@ -106,13 +105,13 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False, 
             tx_tr = tx_tr[:, :tx_tr.shape[1] - 1]
 
         # Append every filtered matrix into the list
-        yb_jets_tr.append(tx_tr)
+        yb_jets_tr.append(y_tr)
         tx_jets_tr.append(tx_tr)
-        ids_jets_tr.append(ids_tr)
+        ids_jets_tr.append(id_tr)
 
-        yb_jets_te.append(tx_te)
+        yb_jets_te.append(y_te)
         tx_jets_te.append(tx_te)
-        ids_jets_te.append(ids_te)
+        ids_jets_te.append(id_te)
 
     return yb_jets_tr, tx_jets_tr, ids_jets_tr, yb_jets_te, tx_jets_te, ids_jets_te
 

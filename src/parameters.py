@@ -9,7 +9,7 @@ default_params = {
     'gamma': 1e-5,
     'batch_size': 8,
     'bias': True,
-    'split_jet': False,
+    'split_jet': True,
     'loss_function': 'logistic'
 }
 

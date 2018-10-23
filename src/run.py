@@ -57,15 +57,37 @@ def main(**params):
 
         np.savez(npy_file, yb=yb, input_data=input_data, test_data=test_data, test_ids=test_ids)
 
-    # Could we improve by initializing with other configurations? E.g. random
-    initial_w = np.zeros(input_data.shape[1])
+    if params['split_jet']:
+        predictions = []
+        ids_prediction = []
+        for jet in range(input_data.shape[0]):
+            # Use features and labels associated to a given jet
+            input_data_jet = input_data[jet]
+            yb_jet = input_data[jet]
 
-    # Train the model. Note that SGD and GD save every weights and loss whilst optimizers in implementations don't
-    w, loss = least_squares_sgd(yb, input_data, initial_w, batch_size=params['batch_size'],
-                                max_iters=params['max_iters'], gamma=params['gamma'],
-                                loss_function=params['loss_function'])
+            # Could we improve by initializing with other configurations? E.g. random
+            initial_w = np.zeros(input_data_jet.shape[1])
 
-    y_pred = predict_labels(w, test_data)
+            # Train the model
+            w, loss = least_squares_sgd(yb_jet, input_data_jet, initial_w, batch_size=params['batch_size'],
+                                        max_iters=params['max_iters'], gamma=params['gamma'],
+                                        loss_function=params['loss_function'])
+            predictions.append(predict_labels(w, test_data[jet]))
+            ids_prediction.append(test_ids[jet])
+
+        # Sort predictions according to IDs
+        test_ids, y_pred = zip(*sorted(zip(ids_prediction, predictions)))
+    else:
+        # Could we improve by initializing with other configurations? E.g. random
+        initial_w = np.zeros(input_data.shape[1])
+
+        # Train the model
+        w, loss = least_squares_sgd(yb, input_data, initial_w, batch_size=params['batch_size'],
+                                    max_iters=params['max_iters'], gamma=params['gamma'],
+                                    loss_function=params['loss_function'])
+
+        y_pred = predict_labels(w, test_data)
+
     create_csv_submission(test_ids, y_pred, results_path + '/results.csv')
 
 
