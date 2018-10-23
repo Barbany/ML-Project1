@@ -62,11 +62,16 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False, 
     # Filter data for every different jet and append it to a list
     num_jets = np.unique(input_data_tr[:, categorical_col])
 
-    yb_jets_tr = tx_jets_tr = ids_jets_tr = []
-    yb_jets_te = tx_jets_te = ids_jets_te = []
+    yb_jets_tr = []
+    tx_jets_tr = []
+    ids_jets_tr = []
+    yb_jets_te = []
+    tx_jets_te = []
+    ids_jets_te = []
 
     for jet in num_jets:
         if verbose:
+            print(jet)
             print("Creating data for jet ", jet)
 
         # Get indexes of data points with the same jet
@@ -87,13 +92,21 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False, 
 
         # Only keep columns without NANs
         remaining_cols = ~np.any(np.isnan(tx_tr), axis=0)
+        if verbose:
+            print(remaining_cols)
         # Delete PRI_jet_num feature
         remaining_cols[categorical_col] = False
+        if jet == 0:
+            # Remove last column
+            remaining_cols[-1] = False
+        if verbose:
+            print(remaining_cols)
 
         # Delete features with NANs
         tx_tr = tx_tr[:, remaining_cols]
         tx_te = tx_te[:, remaining_cols]
 
+        """
         # For Jet 0, there is a really big outlier in the column 3. So, we will remove it
         if jet == 0:
             to_remove = (tx_tr[:, 3] < 200)
@@ -103,6 +116,7 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False, 
 
             # Remove last column (only 0s)
             tx_tr = tx_tr[:, :tx_tr.shape[1] - 1]
+        """
 
         # Append every filtered matrix into the list
         yb_jets_tr.append(y_tr)
@@ -112,6 +126,9 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False, 
         yb_jets_te.append(y_te)
         tx_jets_te.append(tx_te)
         ids_jets_te.append(id_te)
+    if verbose:
+        print('Length of yb_jets_tr ', len(yb_jets_tr))
+        print('Length of tx_jets_te ', len(tx_jets_te))
 
     return yb_jets_tr, tx_jets_tr, ids_jets_tr, yb_jets_te, tx_jets_te, ids_jets_te
 

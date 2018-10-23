@@ -30,9 +30,10 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', la
     for n_iter in range(max_iters):
         loss = compute_loss(y, tx, w, loss_function, lambda_)
         # Compute the gradient for mse loss
-        w = w - gamma * compute_gradient(y, tx, w, loss_function, lambda_)
-        print("Gradient Descent({bi}/{ti}): loss={ls}, w0={w0}, w1={w1}".format(
-            bi=n_iter, ti=max_iters - 1, ls=loss, w0=w[0], w1=w[1]))
+        grad = compute_gradient(y, tx, w, loss_function, lambda_)
+        w = w - gamma * grad
+        print("Gradient Descent({bi}/{ti}): loss={ls}. grad={grad}".format(
+            bi=n_iter, ti=max_iters - 1, ls=loss, grad=grad[0:2]))
     return w, loss
 
 

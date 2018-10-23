@@ -42,7 +42,7 @@ def create_csv_submission(ids, y_pred, name):
                y_pred (predicted class labels)
                name (string name of .csv output file to be created)
     """
-    with open(name, 'w') as csvfile:
+    with open(name, 'w', newline='') as csvfile:
         fieldnames = ['Id', 'Prediction']
         writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=fieldnames)
         writer.writeheader()
@@ -55,6 +55,15 @@ def standardize(x):
     mean_x = np.mean(x)
     x = x - mean_x
     std_x = np.std(x)
+    x = x / std_x
+    return x, mean_x, std_x
+
+
+def standardize_by_feat(x):
+    """Standardize the original data set."""
+    mean_x = np.mean(x, axis=0)
+    x = x - mean_x
+    std_x = np.std(x, axis=0)
     x = x / std_x
     return x, mean_x, std_x
 
