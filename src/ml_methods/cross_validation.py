@@ -9,6 +9,7 @@ from utils.costs import compute_loss
 from ml_methods.implementations import ridge_regression, logistic_regression, reg_logistic_regression
 from utils.helpers import predict_labels
 from utils.helpers import standardize, standardize_by_feat
+import matplotlib.pyplot as plt
 import sys
 
 
@@ -67,10 +68,17 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
                 ws.append(w)
             loss_lambdas[ind_lamb] = np.mean(loss_te)
             if loss_lambdas[ind_lamb] < min_loss:
-                w_star = ws[loss_te == np.min(loss_te)]
+                min_loss_index = np.argmin(loss_te)
+                w_star = ws[min_loss_index]
         ind_min_loss_lamb = np.argmin(loss_lambdas)
         min_lambdas[ind_deg] = lambdas[ind_min_loss_lamb]
         loss_degrees[ind_deg] = loss_lambdas[ind_min_loss_lamb]
+        plt.plot(lambdas, loss_lambdas)
+        plt.title('Loss evolution for degree ' + str(degree))
+        plt.ylabel('Loss')
+        plt.xlabel('Lambda')
+        plt.savefig('../results/plots/plot_degree_' + str(degree) + '.png')
+        plt.clf()
 
         if verbose:
             print("For degree {0}, best lambda: {1} with a test loss: {2}".format(degree, min_lambdas[ind_deg],
@@ -80,5 +88,11 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
     min_loss = loss_degrees[ind_min_loss]
     best_lambda = min_lambdas[ind_min_loss]
     best_degree = degrees[ind_min_loss]
+    plt.plot(degrees, loss_degrees)
+    plt.title('Minimum losses')
+    plt.ylabel('Loss')
+    plt.xlabel('Degree')
+    plt.savefig('../results/plots/plot_min_lambdas.png')
+    plt.clf()
 
     return min_loss, best_lambda, best_degree, w_star
