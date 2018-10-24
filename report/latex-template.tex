@@ -1,16 +1,31 @@
 \documentclass[10pt,conference,compsocconf]{IEEEtran}
 
 \usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{
+	colorlinks,
+	linkcolor={blue},
+	citecolor={blue},
+	urlcolor={blue}
+}
 \usepackage{graphicx}	% For figure environment
-
+\usepackage[utf8]{inputenc}
 
 \begin{document}
-\title{Writing Scientific Papers and Software}
+\title{Learning to discover: the Higgs boson machine learning challenge}
 
-\author{
-  Oriol Barbany Mayor and Sofia an Natalia\\
-  \textit{Department of Computer Science, ETH Zurich, Switzerland}
-}
+%\author{
+%  Oriol Barbany, Natalia Gullón and Sophia Kypraiou \\
+%  \textit{Department of Computer Science, ETH Zurich, Switzerland}
+%}
+
+\author{\IEEEauthorblockN{Oriol Barbany\IEEEauthorrefmark{1},
+		Natalia Gullon\IEEEauthorrefmark{2} and Sophia Kypraiou\IEEEauthorrefmark{3}}
+	\IEEEauthorblockA{Machine Learning (CS-433), School of Computer and Communication Sciences \\ 
+		École Polytechnique Fédérale de Lausanne\\
+		Email: \IEEEauthorrefmark{1}\href{mailto:oriol.barbanymayor@epfl.ch}{oriol.barbanymayor@epfl.ch},
+		\IEEEauthorrefmark{2}\href{mailto:natalia.gullonaltes@epfl.ch}{natalia.gullonaltes@epfl.ch},
+		\IEEEauthorrefmark{3}\href{mailto:sophia.kypraiou@epfl.ch}{sophia.kypraiou@epfl.ch}}}
 
 \maketitle
 
@@ -52,8 +67,8 @@ This brief guide is by no means sufficient, on its own, to
 make its reader an accomplished writer. The reader is urged to use the
 references to further improve his or her writing skills.
 
-\section{The Structure of a Paper}
-\label{sec:structure-paper}
+\section{Methodology}
+\label{sec:methodology}
 
 Scientific papers usually begin with the description of the problem,
 justifying why the problem is interesting. Most importantly, it argues
@@ -88,13 +103,14 @@ following structure:
 \end{description}
 
 
-\section{Tips for Good Writing}
-\label{sec:tips-writing}
+\subsection{Data cleaning}
+\label{sec:data-cleaning}
 
 The ideas for good writing have come
 from~\cite{editor10,jones08,anderson04}.
 
-\subsection{Getting Help}
+\subsection{Model}
+\label{sec:model}
 One should try to get a draft read by as many friendly people as
 possible. And remember to treat your test readers with respect. If
 they are unable to understand something in your paper, then it is
@@ -104,7 +120,8 @@ but use it as an opportunity to improve the paper. Before your submit
 your friends to the pain of reading your draft, please \emph{use a
   spell checker}.
 
-\subsection{Abstract}
+\subsection{Cross-validation}
+\label{sec:cv}
 The abstract should really be written last, along with the title of
 the paper. The four points that should be covered~\cite{jones08}:
 \begin{enumerate}
@@ -114,7 +131,8 @@ the paper. The four points that should be covered~\cite{jones08}:
 \item Say what follows from your solution.
 \end{enumerate}
 
-\subsection{Figures and Tables}
+\section{Experiments and results}
+\label{sec:results}
 
 \begin{figure}[tbp]
   \centering
@@ -136,7 +154,8 @@ example, by comparing Figure~\ref{fig:denoise-fourier} and
 Figure~\ref{fig:denoise-wavelet}, we can see the two different
 situations where Fourier and wavelet basis perform well. 
 
-\subsection{Models and Methods}
+\section{Conclusions}
+\label{sec:conclusions}
 The models and methods
 section should describe what was
 done to answer the research question, describe how it was done,
@@ -180,8 +199,6 @@ structure the methods section by~\cite{kallet04methods}:
   the paper, but explain the key steps.
 \end{enumerate}
 
-\subsection{Results}
-
 Organize the results section based on the sequence of table and
 figures you include. Prepare the tables and figures as soon as all
 the data are analyzed and arrange them in the sequence that best
@@ -210,9 +227,6 @@ report the mean (average value) along with a measure of variability
 (standard deviation(s) or standard error of the mean).
 
 
-\section{Tips for Good Software}
-\label{sec:tips-software}
-
 There is a lot of literature (for example~\cite{hunt99pragmatic} and
 \cite{spolsky04software}) on how to write software. It is not the
 intention of this section to replace software engineering
@@ -239,10 +253,6 @@ reader happy:
 \item Describe how the results presented in your paper can be reproduced.
 \end{itemize}
 
-
-\subsection{\LaTeX{} Primer}
-\label{sec:latex-primer}
-
 \LaTeX{} is one of the most commonly used document preparation systems
 for scientific journals and conferences. It is based on the idea
 that authors should be able to focus on the content of what they are
@@ -251,14 +261,12 @@ The source of this file can be used as a starting point for how to use
 the different commands in \LaTeX{}. We are using an IEEE style for
 this course.
 
-\subsubsection{Installation}
-
 There are various different packages available for processing \LaTeX{}
 documents.
 On OSX use Mac\TeX{}
 (\url{http://www.tug.org/mactex/}). On Windows, use for example Mik\TeX{} (\url{http://miktex.org/}).
 
-\subsubsection{Compiling \LaTeX{}}
+
 Your directory should contain at least~4 files, in addition to image
 files. Images should be in \texttt{.png}, \texttt{.jpg} or
 \texttt{.pdf} format.
@@ -278,7 +286,6 @@ $ pdflatex groupXX-submission
 \end{verbatim}
 This should give you a PDF document \texttt{groupXX-submission.pdf}.
 
-\subsubsection{Equations}
 
 There are three types of equations available: inline equations, for
 example $y=mx + c$, which appear in the text, unnumbered equations
@@ -298,9 +305,6 @@ Note
 that \texttt{figure*} and \texttt{table*} cause the corresponding
 figure or table to span both columns.
 
-
-
-\section{Summary}
 
 The aim of a scientific paper is to convey the idea or discovery of
 the researcher to the minds of the readers. The associated software
