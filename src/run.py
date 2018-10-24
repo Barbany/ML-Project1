@@ -6,7 +6,7 @@ import os
 
 import numpy as np
 
-from utils.helpers import predict_labels, create_csv_submission, standardize_by_feat
+from utils.helpers import predict_labels, create_csv_submission, standardize_by_feat, build_poly, predict_labels_logistic
 from preproc.data_clean import pca, load_csv_data_no_na, correlation_coefficient, load_csv_split_jet
 from ml_methods.implementations import least_squares_sgd
 
@@ -51,9 +51,8 @@ def main(**params):
             input_data, test_data = pca(input_data, test_data)
         else:
             if not params['split_jet']:
-                print('Inside this fucking place')
-                input_data, _, _ = standardize(input_data)
-                test_data, _, _ = standardize(test_data)
+                input_data, mean_x, std_x = standardize_by_feat(input_data)
+                test_data = (test_data - mean_x) / std_x
 
         if params['bias']:
             if not params['split_jet']:
@@ -71,7 +70,7 @@ def main(**params):
             input_data_jet = input_data[jet]
 
             test_data_jet = test_data[jet]
-            test_data_jet, _, _ = standardize_by_feat(test_data_jet)
+            #_, mean_data, std_data = standardize_by_feat(input_data_jet)
 
             """
             # Standardize data
@@ -96,17 +95,21 @@ def main(**params):
                 print('-' * 120)
 
             _, _, best_degree, w_star = cross_validation(yb_jet, input_data_jet, params['k-fold'],
-                                                         lambdas=np.logspace(-4, 0, 30), degrees=range(1, 10),
+                                                         lambdas=np.logspace(-4, 0, 15), degrees=range(1, 7),
                                                          max_iters=params['max_iters'], gamma=params['gamma'],
                                                          verbose=params['verbose'])
 
-            predictions = predictions + list(predict_labels(w_star, build_poly(test_data_jet, best_degree)))
+            tx_train = build_poly(test_data_jet, best_degree)
+            tx_test = build_poly(test_data_jet, best_degree)
+            _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
+            tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
+
+            predictions = predictions + list(predict_labels_logistic(w_star, tx_test))
             ids_prediction = ids_prediction + list(test_ids[jet])
 
         # Sort predictions according to IDs
         test_ids, y_pred = zip(*sorted(zip(ids_prediction, predictions)))
-        y_pred[y_pred < 0.5] = -1
-        y_pred[y_pred > 0.5] = 1
+
     else:
         # Could we improve by initializing with other configurations? E.g. random
         initial_w = np.zeros(input_data.shape[1])

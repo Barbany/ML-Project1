@@ -21,6 +21,9 @@ def get_data_cv(y, x, k_indices, k, degree):
     tx_train = build_poly(x_train, degree)
     tx_test = build_poly(x_test, degree)
 
+    tx_train[:, 1:], mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
+    tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
+
     return tx_train, y_train, tx_test, y_test
 
 
