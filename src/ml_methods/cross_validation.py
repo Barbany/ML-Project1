@@ -53,7 +53,8 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
     w_star = []
 
     for ind_deg, degree in enumerate(degrees):
-        loss_lambdas = np.zeros(len(lambdas))
+        loss_lambdas_te = np.zeros(len(lambdas))
+        loss_lambdas_tr = np.zeros(len(lambdas))
         for ind_lamb, lambda_ in enumerate(lambdas):
             loss_tr = []
             loss_te = []
@@ -66,14 +67,17 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
                 loss2 = compute_loss(y_te, tx_te, w, loss_function='logistic', lambda_=lambda_)
                 loss_te.append(loss2)
                 ws.append(w)
-            loss_lambdas[ind_lamb] = np.mean(loss_te)
-            if loss_lambdas[ind_lamb] < min_loss:
+            loss_lambdas_te[ind_lamb] = np.mean(loss_te)
+            loss_lambdas_tr[ind_lamb] = np.mean(loss_tr)
+            if loss_lambdas_te[ind_lamb] < min_loss:
                 min_loss_index = np.argmin(loss_te)
                 w_star = ws[min_loss_index]
-        ind_min_loss_lamb = np.argmin(loss_lambdas)
+        ind_min_loss_lamb = np.argmin(loss_lambdas_te)
         min_lambdas[ind_deg] = lambdas[ind_min_loss_lamb]
-        loss_degrees[ind_deg] = loss_lambdas[ind_min_loss_lamb]
-        plt.plot(lambdas, loss_lambdas)
+        loss_degrees[ind_deg] = loss_lambdas_te[ind_min_loss_lamb]
+        plt.plot(lambdas, loss_lambdas_te, 'b-', label='Test')
+        plt.plot(lambdas, loss_lambdas_tr, 'r-', label='Train')
+        plt.legend(loc='upper left')
         plt.title('Loss evolution for degree ' + str(degree))
         plt.ylabel('Loss')
         plt.xlabel('Lambda')
