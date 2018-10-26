@@ -105,7 +105,7 @@ def main(**params):
             _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
             tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
 
-            predictions = predictions + list(predict_labels_logistic(w_star, tx_test))
+            predictions = predictions + list(predict_labels_logistic(w_star, tx_test, jet=jet))
             ids_prediction = ids_prediction + list(test_ids[jet])
 
         # Sort predictions according to IDs

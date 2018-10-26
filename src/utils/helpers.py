@@ -36,9 +36,11 @@ def predict_labels(weights, data):
     return y_pred
 
 
-def predict_labels_logistic(weights, data):
+def predict_labels_logistic(weights, data, jet=0):
     """Generates class predictions given weights, and a test data matrix for logistic regression"""
     y_pred = sigmoid(np.dot(data, weights))
+    npy_file = '../results/labels_pred_jet_' + str(jet) + '.npz'
+    np.savez(npy_file, y_pred)
     y_pred[np.where(y_pred <= 0.5)] = -1
     y_pred[np.where(y_pred > 0.5)] = 1
 
