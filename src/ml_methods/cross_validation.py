@@ -79,8 +79,8 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
         ind_min_loss_lamb = np.argmin(loss_lambdas_te)
         min_lambdas[ind_deg] = lambdas[ind_min_loss_lamb]
         loss_degrees[ind_deg] = loss_lambdas_te[ind_min_loss_lamb]
-        plt.plot(lambdas, loss_lambdas_te, 'b-', label='Test')
-        plt.plot(lambdas, loss_lambdas_tr, 'r-', label='Train')
+        plt.semilogx(lambdas, loss_lambdas_te, 'b-', label='Test')
+        plt.semilogx(lambdas, loss_lambdas_tr, 'r-', label='Train')
         plt.legend(loc='upper left')
         plt.title('Loss evolution for degree ' + str(degree) + ' in jet ' + str(jet))
         plt.ylabel('Loss')
