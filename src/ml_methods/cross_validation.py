@@ -5,9 +5,9 @@ from utils.costs import compute_loss
 from utils.helpers import build_poly, build_k_indices
 
 from preproc.data_clean import load_csv_data_no_na
-from utils.costs import compute_loss
+from utils.costs import compute_loss, accuracy
 from ml_methods.implementations import ridge_regression, logistic_regression, reg_logistic_regression
-from utils.helpers import predict_labels
+from utils.helpers import predict_labels, predict_labels_logistic
 from utils.helpers import standardize, standardize_by_feat
 import matplotlib.pyplot as plt
 import sys
@@ -28,7 +28,7 @@ def get_data_cv(y, x, k_indices, k, degree):
     return tx_train, y_train, tx_test, y_test
 
 
-def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123, verbose=False):
+def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123, verbose=False, jet=0):
     """
     K-fold cross validation
     :param y: labels
@@ -63,8 +63,11 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
                 tx_tr, y_tr, tx_te, y_te = get_data_cv(y, x, k_indices, k, degree)
                 initial_w = np.zeros(tx_tr.shape[1])
                 w, loss = reg_logistic_regression(y_tr, tx_tr, lambda_, initial_w, max_iters, gamma)
+                y_pred_tr = predict_labels_logistic(w, tx_tr)
+                loss = accuracy(y_tr, y_pred_tr)
                 loss_tr.append(loss)
-                loss2 = compute_loss(y_te, tx_te, w, loss_function='logistic', lambda_=lambda_)
+                y_pred_te = predict_labels_logistic(w, tx_te)
+                loss2 = accuracy(y_te, y_pred_te)
                 loss_te.append(loss2)
                 ws.append(w)
             loss_lambdas_te[ind_lamb] = np.mean(loss_te)
@@ -72,16 +75,17 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
             if loss_lambdas_te[ind_lamb] < min_loss:
                 min_loss_index = np.argmin(loss_te)
                 w_star = ws[min_loss_index]
+                min_loss = loss_lambdas_te[ind_lamb]
         ind_min_loss_lamb = np.argmin(loss_lambdas_te)
         min_lambdas[ind_deg] = lambdas[ind_min_loss_lamb]
         loss_degrees[ind_deg] = loss_lambdas_te[ind_min_loss_lamb]
         plt.plot(lambdas, loss_lambdas_te, 'b-', label='Test')
         plt.plot(lambdas, loss_lambdas_tr, 'r-', label='Train')
         plt.legend(loc='upper left')
-        plt.title('Loss evolution for degree ' + str(degree))
+        plt.title('Loss evolution for degree ' + str(degree) + ' in jet ' + str(jet))
         plt.ylabel('Loss')
         plt.xlabel('Lambda')
-        plt.savefig('../results/plots/plot_degree_' + str(degree) + '.png')
+        plt.savefig('../results/plots/plot_degree_' + str(degree) + '_jet_' + str(jet) + '.png')
         plt.clf()
 
         if verbose:
@@ -96,7 +100,7 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
     plt.title('Minimum losses')
     plt.ylabel('Loss')
     plt.xlabel('Degree')
-    plt.savefig('../results/plots/plot_min_lambdas.png')
+    plt.savefig('../results/plots/plot_min_lambdas_jet_' + str(jet) + '.png')
     plt.clf()
 
     return min_loss, best_lambda, best_degree, w_star

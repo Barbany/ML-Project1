@@ -95,9 +95,10 @@ def main(**params):
                 print('-' * 120)
 
             _, _, best_degree, w_star = cross_validation(yb_jet, input_data_jet, params['k-fold'],
-                                                         lambdas=np.logspace(-20, -10, 20), degrees=range(1, 10),
+                                                         lambdas=np.logspace(-10, 0, 6), degrees=range(7, 12),
                                                          max_iters=params['max_iters'], gamma=params['gamma'],
-                                                         verbose=params['verbose'])
+                                                         verbose=params['verbose'], jet=jet)
+
 
             tx_train = build_poly(test_data_jet, best_degree)
             tx_test = build_poly(test_data_jet, best_degree)

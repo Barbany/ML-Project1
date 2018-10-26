@@ -41,6 +41,10 @@ def logistic_2(y, tx, w, lambda_):
     return np.squeeze(- loss) + lambda_ * np.squeeze(w.T.dot(w))
 
 
+def accuracy(y_true, y_pred):
+    return sum([1 for i in range(len(y_true)) if y_pred[i] != y_true[i]]) / len(y_true)
+
+
 def compute_gradient(y, tx, w, loss_function='mse', lambda_=0):
     """Compute a stochastic gradient from just few examples n and
     their corresponding y_n labels.
