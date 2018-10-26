@@ -6,9 +6,9 @@ import os
 
 import numpy as np
 
-from utils.helpers import predict_labels, create_csv_submission, standardize_by_feat, build_poly, predict_labels_logistic
+from utils.helpers import *
 from preproc.data_clean import pca, load_csv_data_no_na, correlation_coefficient, load_csv_split_jet
-from ml_methods.implementations import least_squares_sgd
+from ml_methods.implementations import least_squares_sgd, reg_logistic_regression
 
 from parameters import default_params
 from utils.argument_parser import parse_arguments
@@ -70,7 +70,7 @@ def main(**params):
             input_data_jet = input_data[jet]
 
             test_data_jet = test_data[jet]
-            #_, mean_data, std_data = standardize_by_feat(input_data_jet)
+            # _, mean_data, std_data = standardize_by_feat(input_data_jet)
 
             """
             # Standardize data
@@ -94,17 +94,27 @@ def main(**params):
                 print('Start training with jet ', jet)
                 print('-' * 120)
 
-            _, _, best_degree, w_star = cross_validation(yb_jet, input_data_jet, params['k-fold'],
-                                                         lambdas=np.logspace(-20, -10, 20), degrees=range(1, 10),
-                                                         max_iters=params['max_iters'], gamma=params['gamma'],
-                                                         verbose=params['verbose'])
+            # _, _, best_degree, w_star = cross_validation(yb_jet, input_data_jet, params['k-fold'],
+            #                                             lambdas=np.logspace(-20, -10, 20), degrees=range(1, 10),
+            #                                             max_iters=params['max_iters'], gamma=params['gamma'],
+            #                                             verbose=params['verbose'])
 
-            tx_train = build_poly(test_data_jet, best_degree)
-            tx_test = build_poly(test_data_jet, best_degree)
-            _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
+            tx_train = build_poly(input_data_jet, 8)
+            tx_test = build_poly(test_data_jet, 8¡)
+
+            tx_train[:, 1:], mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
             tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
 
-            predictions = predictions + list(predict_labels_logistic(w_star, tx_test))
+            initial_w = np.zeros(tx_train.shape[1])
+            w, _ = reg_logistic_regression(yb_jet, tx_train, lambda_=1e-12, initial_w=initial_w,
+                                           max_iters=params['max_iters'], gamma=params['gamma'])
+
+            # tx_train = build_poly(test_data_jet, best_degree)
+            # tx_test = build_poly(test_data_jet, best_degree)
+            # _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
+            # tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
+
+            predictions = predictions + list(predict_labels_logistic(w, tx_test))
             ids_prediction = ids_prediction + list(test_ids[jet])
 
         # Sort predictions according to IDs
