@@ -6,8 +6,8 @@ import os
 
 import numpy as np
 
-from utils.helpers import predict_labels, create_csv_submission, standardize_by_feat, build_poly, predict_labels_logistic
-from preproc.data_clean import pca, load_csv_data_no_na, correlation_coefficient, load_csv_split_jet
+from utils.helpers import *
+from preproc.data_clean import *
 from ml_methods.implementations import least_squares_sgd
 
 from parameters import default_params
@@ -39,7 +39,7 @@ def main(**params):
         if params['split_jet']:
             yb, input_data, _, _, test_data, test_ids = load_csv_split_jet(
                 os.path.join(params['raw_data'], 'train.csv'),
-                os.path.join(params['raw_data'], 'test.csv'), verbose=params['verbose'])
+                os.path.join(params['raw_data'], 'test.csv'), mass=params['split_mass'], verbose=params['verbose'])
         else:
             yb, input_data, _, _, test_data, test_ids = load_csv_data_no_na(
                 os.path.join(params['raw_data'], 'train.csv'),

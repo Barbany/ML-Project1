@@ -16,16 +16,12 @@ def parse_arguments(default_params):
     )
 
     parser.add_argument(
-        '--pca', type=parse_bool, help='Perform experiment with Principal Component Analysis'
+        '-pca', action='store_true', help='Perform experiment with Principal Component Analysis', default=False
     )
     parser.add_argument(
-        '--verbose', type=parse_bool,
+        '--verbose', action='store_true',
         help='Provide additional details about the program. This level of detail'
-             ' can be very helpful for troubleshooting problems'
-    )
-    parser.add_argument(
-        '--bias', type=parse_bool,
-        help='Include a bias term in the linear regression model'
+             ' can be very helpful for troubleshooting problems', default=False
     )
     parser.add_argument(
         '--max_iterations', type=int,

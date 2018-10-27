@@ -2,8 +2,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pathlib
 
-from src.preproc.data_clean import load_csv_data_no_na, load_csv_split_jet
-
 
 def plot_distribution(features, filter_type, path):
     '''
@@ -29,12 +27,3 @@ def plot_distribution(features, filter_type, path):
         # plt.show()
         feat_no += 1
 
-directory = '../../plots/'
-pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
-
-_, input_data, _, _, _, _ = load_csv_data_no_na('../../data/train.csv', '../../data/test.csv')
-plot_distribution(input_data.T, 'no_na', directory)
-
-_, input_data, _, _, _, _ = load_csv_split_jet('../../data/train.csv', '../../data/test.csv', verbose=True)
-for jet in range(len(input_data)):
-    plot_distribution(input_data[jet].T, 'jet_filtering_'+str(jet), directory)

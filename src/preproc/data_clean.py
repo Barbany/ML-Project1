@@ -38,7 +38,7 @@ def load_csv_data_no_na(train_path, test_path, na_indicator=-999, verbose=False)
     return yb_tr, input_data_tr, ids_tr, yb_te, input_data_te, ids_te
 
 
-def load_csv_split_jet(train_path, test_path, na_indicator=-999, verbose=False, categorical_col=22):
+def load_csv_split_jet(train_path, test_path, na_indicator=-999, mass=False, verbose=False, categorical_col=22):
     """"
     Load raw data by splitting depending on the 'PRI_jet_num', which determines the existence of some
     other features according to the explanation of the dataset included in
