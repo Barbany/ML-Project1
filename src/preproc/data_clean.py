@@ -38,7 +38,8 @@ def load_csv_data_no_na(train_path, test_path, na_indicator=-999, verbose=False)
     return yb_tr, input_data_tr, ids_tr, yb_te, input_data_te, ids_te
 
 
-def load_csv_split_jet(train_path, test_path, na_indicator=-999, mass=False, verbose=False, categorical_col=22):
+def load_csv_split_jet(train_path, test_path, nan_indicator=-999, mass=False, outliers=False,
+                       verbose=False, categorical_col=22, IQR_ratio=3):
     """"
     Load raw data by splitting depending on the 'PRI_jet_num', which determines the existence of some
     other features according to the explanation of the dataset included in
@@ -46,7 +47,9 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, mass=False, ver
 
     :param train_path: Path of the training raw data
     :param test_path: Path of the training raw data
-    :param na_indicator: Numeric NA Indicator (optional). Default value = -999
+    :param nan_indicator: Numeric NA Indicator (optional). Default value = -999
+    :param mass: Separate by mass instead of deleting it (It has some NANs)
+    :param outliers: Remove outliers based on outer fence approach (optional). Default value = False
     :param verbose: Print number of NANs for each feature (optional). Default value = False
     :param categorical_col: Number of column where the categorical feature, in this case Jet, conditions the others
     :return: labels_tr, features_tr, ids_tr, labels_te, features_te, ids_te
@@ -62,17 +65,11 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, mass=False, ver
     # Filter data for every different jet and append it to a list
     num_jets = np.unique(input_data_tr[:, categorical_col])
 
-    yb_jets_tr = []
-    tx_jets_tr = []
-    ids_jets_tr = []
-    yb_jets_te = []
-    tx_jets_te = []
-    ids_jets_te = []
-
     for jet in num_jets:
         if verbose:
-            print(jet)
             print("Creating data for jet ", jet)
+            if mass:
+                print('Separating by value of DER mass MMC')
 
         # Get indexes of data points with the same jet
         idx_tr = input_data_tr[:, categorical_col] == jet
@@ -88,7 +85,7 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, mass=False, ver
         id_te = ids_te[idx_te]
 
         # Label NANs with numpy built-in indicator
-        tx_tr[tx_tr == na_indicator] = np.nan
+        tx_tr[tx_tr == nan_indicator] = np.nan
 
         # Only keep columns without NANs
         remaining_cols = ~np.any(np.isnan(tx_tr), axis=0)
@@ -102,35 +99,38 @@ def load_csv_split_jet(train_path, test_path, na_indicator=-999, mass=False, ver
         if verbose:
             print(remaining_cols)
 
-        # Delete features with NANs
-        tx_tr = tx_tr[:, remaining_cols]
-        tx_te = tx_te[:, remaining_cols]
+        if outliers:
+            lower_quartile = np.quantile(feature, 0.25, axis=0)
+            median = np.quantile(feature, 0.5, axis=0)
+            upper_quartile = np.quantile(feature, 0.75, axis=0)
 
-        """
-        # For Jet 0, there is a really big outlier in the column 3. So, we will remove it
-        if jet == 0:
-            to_remove = (tx_tr[:, 3] < 200)
-            tx_tr = tx_tr[to_remove, :]
-            y_tr = y_tr[to_remove]
-            ids_tr = ids_tr[to_remove]
+            # Equation (1) in report
+            diff_no_outlier = (upper_quartile - lower_quartile) * IQR_ratio
+            min_no_outlier = median - diff_no_outlier
+            max_no_outlier = median + diff_no_outlier
 
-            # Remove last column (only 0s)
-            tx_tr = tx_tr[:, :tx_tr.shape[1] - 1]
-        """
+            entries_no_outliers = np.all(np.logical_and(tx_tr < max_no_outlier, tx_tr > min_no_outlier), axis=1)
+            if verbose:
+                print('Removing ', sum(entries_no_outliers) * 100 / tx_tr.shape[1], '% of the entries')
+            tx_tr = tx_tr[entries_no_outliers, :]
 
-        # Append every filtered matrix into the list
-        yb_jets_tr.append(y_tr)
-        tx_jets_tr.append(tx_tr)
-        ids_jets_tr.append(id_tr)
+        if mass:
+            # Don't delete mass column. Separate by data points that have it defined
+            remaining_cols[0] = True
+            tx_tr_mass = tx_tr[:, remaining_cols]
+            tx_te_mass = tx_te[:, remaining_cols]
 
-        yb_jets_te.append(y_te)
-        tx_jets_te.append(tx_te)
-        ids_jets_te.append(id_te)
-    if verbose:
-        print('Length of yb_jets_tr ', len(yb_jets_tr))
-        print('Length of tx_jets_te ', len(tx_jets_te))
+            te_no_mass = tx_tr_mass[:, 0] == nan_indicator
+            tr_no_mass = tx_te_mass[:, 0] == nan_indicator
 
-    return yb_jets_tr, tx_jets_tr, ids_jets_tr, yb_jets_te, tx_jets_te, ids_jets_te
+            np.savez('processed_data_jet' + str(jet) + '_no_mass.npz', yb=y_tr[tr_no_mass],
+                     input_data=tx_tr[tr_no_mass, :], test_data=tx_te[te_no_mass, :], test_ids=id_te[te_no_mass])
+            np.savez('processed_data_jet' + str(jet) + '_mass.npz', yb=y_tr[~tr_no_mass],
+                     input_data=tx_tr[~tr_no_mass, :], test_data=tx_te[~te_no_mass, :], test_ids=id_te[~te_no_mass])
+        else:
+            # Save features after deleting the ones with one or more NANs
+            np.savez('processed_data_jet' + str(jet) + '.npz', yb=y_tr, input_data=tx_tr[:, remaining_cols],
+                     test_data=tx_te[:, remaining_cols], test_ids=id_te)
 
 
 def pca(features_tr, features_te, threshold=1e-4, verbose=False):

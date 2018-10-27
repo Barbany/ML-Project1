@@ -1,5 +1,6 @@
 import argparse
 
+
 def parse_bool(arg):
     arg = arg.lower()
     if 'true'.startswith(arg):
@@ -9,6 +10,7 @@ def parse_bool(arg):
     else:
         raise ValueError()
 
+
 def parse_arguments(default_params):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -16,7 +18,10 @@ def parse_arguments(default_params):
     )
 
     parser.add_argument(
-        '-pca', action='store_true', help='Perform experiment with Principal Component Analysis', default=False
+        '--pca', action='store_true', help='Perform experiment with Principal Component Analysis', default=False
+    )
+    parser.add_argument(
+        '--cv', action='store_true', help='Perform cross validation', default=False
     )
     parser.add_argument(
         '--verbose', action='store_true',

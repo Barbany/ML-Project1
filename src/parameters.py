@@ -9,9 +9,11 @@ default_params = {
     'split_jet': True,
     'split_mass': True,
     'loss_function': 'logistic',
-    'k-fold': 10
+    'k-fold': 10,
+    'outliers': True,
+    'pca': False
 }
 
 tag_params = [
-    'pca', 'loss_function', 'split_jet', 'split_mass'
+    'pca', 'loss_function', 'split_jet', 'split_mass', 'outliers'
 ]

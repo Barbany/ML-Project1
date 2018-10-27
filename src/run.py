@@ -8,7 +8,7 @@ import numpy as np
 
 from utils.helpers import *
 from preproc.data_clean import *
-from ml_methods.implementations import least_squares_sgd
+from ml_methods.implementations import *
 
 from parameters import default_params
 from utils.argument_parser import parse_arguments
@@ -28,65 +28,45 @@ def main(**params):
     results_path = setup_results_dir(params)
     tee_stdout(os.path.join(results_path, 'log'))
 
-    npy_file = os.path.join(results_path, 'processed_data.npz')
-    if os.path.isfile(npy_file):
-        data = np.load(npy_file)
-        yb = data['yb']
-        input_data = data['input_data']
-        test_data = data['test_data']
-        test_ids = data['test_ids']
-    else:
+    # Look if data have already been processed
+    npy_files = [file for file in os.listdir(results_path) if file.endswith(".npz")]
+
+    if len(npy_files) == 0:
         if params['split_jet']:
-            yb, input_data, _, _, test_data, test_ids = load_csv_split_jet(
+            load_csv_split_jet(
                 os.path.join(params['raw_data'], 'train.csv'),
                 os.path.join(params['raw_data'], 'test.csv'), mass=params['split_mass'], verbose=params['verbose'])
         else:
             yb, input_data, _, _, test_data, test_ids = load_csv_data_no_na(
                 os.path.join(params['raw_data'], 'train.csv'),
                 os.path.join(params['raw_data'], 'test.csv'))
-        if params['correlation']:
-            input_data = correlation_coefficient(input_data)
+            if params['correlation']:
+                input_data = correlation_coefficient(input_data)
 
-        if params['pca']:
-            input_data, test_data = pca(input_data, test_data)
-        else:
-            if not params['split_jet']:
+            if params['pca']:
+                input_data, test_data = pca(input_data, test_data)
+            else:
                 input_data, mean_x, std_x = standardize_by_feat(input_data)
                 test_data = (test_data - mean_x) / std_x
 
-        if params['bias']:
-            if not params['split_jet']:
-                input_data = np.append(np.ones((input_data.shape[0], 1)), input_data, axis=1)
-                test_data = np.append(np.ones((test_data.shape[0], 1)), test_data, axis=1)
+            # Save all values in a unique file. If we did this with the split_jet we could get a Memory Error exception
+            np.savez('processed_data.npz', yb=yb, input_data=input_data, test_data=test_data, test_ids=test_ids)
 
-        np.savez(npy_file, yb=yb, input_data=input_data, test_data=test_data, test_ids=test_ids)
-
+    # Load data from npz files of separated jets (and mass if parameter set to True)
     if params['split_jet']:
         predictions = []
         ids_prediction = []
-        for jet in range(len(input_data)):
-            # Use features and labels associated to a given jet
-            yb_jet = yb[jet]
-            input_data_jet = input_data[jet]
-
-            test_data_jet = test_data[jet]
-            #_, mean_data, std_data = standardize_by_feat(input_data_jet)
-
-            """
-            # Standardize data
-            input_data_jet, _, _ = standardize(input_data_jet)
-
-            if params['bias']:
-                input_data_jet = np.append(np.ones((input_data_jet.shape[0], 1)), input_data_jet, axis=1)
-                test_data_jet = np.append(np.ones((test_data_jet.shape[0], 1)), test_data_jet, axis=1)
-
-            # Could we improve by initializing with other configurations? E.g. random
-            initial_w = np.zeros(input_data_jet.shape[1])
-            """
+        for file_jet in range(len(npy_files)):
+            # Load data
+            data = np.load(file_jet)
+            yb = data['yb']
+            input_data = data['input_data']
+            test_data = data['test_data']
+            test_ids = data['test_ids']
 
             if params['loss_function'] == 'logistic':
                 # Convert labels to {0, 1} instead of {-1, 1}
-                yb_jet[yb_jet == -1] = 0
+                yb[yb == -1] = 0
 
             # Train the model
             if params['verbose']:
@@ -94,24 +74,49 @@ def main(**params):
                 print('Start training with jet ', jet)
                 print('-' * 120)
 
-            _, _, best_degree, w_star = cross_validation(yb_jet, input_data_jet, params['k-fold'],
-                                                         lambdas=np.logspace(-10, 0, 6), degrees=range(7, 12),
-                                                         max_iters=params['max_iters'], gamma=params['gamma'],
-                                                         verbose=params['verbose'], jet=jet)
+            if params['cross_validation']:
+                _, best_lambda, best_degree, w_star = cross_validation(yb, input_data, params['k-fold'],
+                                                                       lambdas=np.logspace(-10, 0, 6),
+                                                                       degrees=range(7, 12),
+                                                                       max_iters=params['max_iters'],
+                                                                       gamma=params['gamma'],
+                                                                       verbose=params['verbose'], jet=jet,
+                                                                       loss_function=params['loss_function'])
+                tx_train = build_poly(train_data, best_degree)
+                tx_test = build_poly(test_data, best_degree)
 
+                # Standardize test and train with train values for each feature
+                # Note that first column is not included since it's the bias term
+                _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
+                tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
+            else:
+                best_degree = 9
+                best_lambda = 1e2
+                tx_train = build_poly(train_data, best_degree)
+                tx_test = build_poly(test_data, best_degree)
 
-            tx_train = build_poly(test_data_jet, best_degree)
-            tx_test = build_poly(test_data_jet, best_degree)
-            _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
-            tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
+                # Standardize test and train with train values for each feature
+                # Note that first column is not included since it's the bias term
+                _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
+                tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
 
-            predictions = predictions + list(predict_labels_logistic(w_star, tx_test, jet=jet))
+                w_star = reg_logistic_regression(yb, tx_train, lambda_=best_lambda, gamma=params['gamma'],
+                                                 max_iters=params['max_iters'], initial_w=np.zeros(tx_tr.shape[1]))
+
+            predictions = predictions + list(predict_labels_logistic(w_star, tx_test, jet=jet,
+                                                                     mass=params['split_mass']))
             ids_prediction = ids_prediction + list(test_ids[jet])
 
         # Sort predictions according to IDs
         test_ids, y_pred = zip(*sorted(zip(ids_prediction, predictions)))
 
     else:
+        data = np.load(npy_files)
+        yb = data['yb']
+        input_data = data['input_data']
+        test_data = data['test_data']
+        test_ids = data['test_ids']
+
         # Could we improve by initializing with other configurations? E.g. random
         initial_w = np.zeros(input_data.shape[1])
 
