@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn
-import time
 
 from utils.helpers import load_csv_data, standardize
 
@@ -179,8 +178,6 @@ def correlation_coefficient(features, threshold=0.9, visualize=False):
         :param visualize: Print information of each eigenvalue and its percentage of contribution
         :return: uncorrelated_features (Shape = (x, num_new_features) Note that num_new_features <= num_features),
         """
-    features, _, _ = standardize(features)
-
     # calculate the transpose matrix to find the correlated array of shape (#features, #features)
     correlation_array = np.corrcoef(features.T)
 
@@ -203,8 +200,7 @@ def correlation_coefficient(features, threshold=0.9, visualize=False):
         plt.yticks(rotation=0)
         plt.xticks(rotation=90)
 
-        timestr = time.strftime("%d.%m.%Y-%H:%M:%S")
-        plt.savefig('correlation_coefficient_' + timestr + '.png')
+        plt.savefig('correlation_coefficient.png')
         plt.show()
 
     return uncorrelated_features
