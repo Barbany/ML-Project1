@@ -2,7 +2,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pathlib
 
-from src.preproc.data_clean import load_csv_data_no_na, load_csv_split_jet
+from preproc.data_clean import load_csv_data_no_na, load_csv_split_jet
 
 
 def plot_distribution(features, filter_type, path):
@@ -28,6 +28,12 @@ def plot_distribution(features, filter_type, path):
         plt.savefig(path+"distribution_"+str(feat_no)+"_("+filter_type+").png")
         # plt.show()
         feat_no += 1
+
+def plot_results(predictions):
+    sns.distplot(predictions)
+    plt.title("Distribution of the predictions")
+    plt.xlabel("prediction")
+    plt.show()
 
 directory = '../../plots/'
 pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
