@@ -3,4 +3,6 @@ venv/
 **/__pycache__/
 .DS_Store
 data/
+plots/
+results/
 src/trials/
