@@ -21,7 +21,7 @@ def compute_loss(y, tx, w, loss_function='mse', lambda_=0):
         'mse': 1 / (2 * len(y)) * sum((y - tx.dot(w)) ** 2) + lambda_ * np.linalg.norm(w) ** 2,
         'rmse': 1 / (len(y)) * np.abs(sum((y - tx.dot(w)))) + lambda_ * np.linalg.norm(w) ** 2,
         'mae': 1 / len(y) * sum(np.abs(y - tx.dot(w))) + lambda_ * np.linalg.norm(w) ** 2,
-        'logistic': logistic_2(y, tx, w, lambda_)
+        'logistic': logistic(y, tx, w, lambda_)
     }[loss_function]
 
 
@@ -29,7 +29,8 @@ def logistic(y, tx, w, lambda_):
     in_pred = tx.dot(w)
     pred = sigmoid(in_pred)
     loss = y.T.dot(np.log(pred)) + (1 - y).T.dot(np.log(1 - pred))
-    return np.squeeze(- loss) + lambda_ * np.squeeze(w.T.dot(w))
+    loss_reg = np.squeeze(-loss) + lambda_ * np.squeeze(w.T.dot(w))
+    return loss_reg
 
 
 def logistic_2(y, tx, w, lambda_):
@@ -42,7 +43,21 @@ def logistic_2(y, tx, w, lambda_):
 
 
 def accuracy(y_true, y_pred):
-    return sum([1 for i in range(len(y_true)) if y_pred[i] != y_true[i]]) / len(y_true)
+    # sum([1 for i in range(len(y_true)) if y_pred[i] == y_true[i]]) / len(y_true)
+    return sum(y_true == y_pred) / len(y_true)
+
+
+def correct_predictions(y, tx, w):
+    """
+        Return the percentage of wrong predictions (between 0 and 1)
+    """
+
+    y_pred = sigmoid(np.dot(tx, w))
+    y_pred[np.where(y_pred <= 0.5)] = 0
+    y_pred[np.where(y_pred > 0)] = 1
+    correct_pred = np.sum(y_pred == y)
+
+    return float(correct_pred) / float(len(y))
 
 
 def compute_gradient(y, tx, w, loss_function='mse', lambda_=0):

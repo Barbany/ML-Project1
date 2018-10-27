@@ -5,7 +5,7 @@ from utils.costs import compute_loss
 from utils.helpers import build_poly, build_k_indices
 
 from preproc.data_clean import load_csv_data_no_na
-from utils.costs import compute_loss, accuracy
+from utils.costs import compute_loss, accuracy, correct_predictions
 from ml_methods.implementations import ridge_regression, logistic_regression, reg_logistic_regression
 from utils.helpers import predict_labels, predict_labels_logistic
 from utils.helpers import standardize, standardize_by_feat
@@ -48,41 +48,53 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
 
     k_indices = build_k_indices(y, k_fold, seed)
 
-    min_loss = 1e10
+    max_acc = 0
 
     w_star = []
 
     for ind_deg, degree in enumerate(degrees):
         loss_lambdas_te = np.zeros(len(lambdas))
         loss_lambdas_tr = np.zeros(len(lambdas))
+
         for ind_lamb, lambda_ in enumerate(lambdas):
             loss_tr = []
             loss_te = []
             ws = []
+
             for k in range(k_fold):
+
+                if verbose:
+                    print("K-fold k = {}".format(k))
+
                 tx_tr, y_tr, tx_te, y_te = get_data_cv(y, x, k_indices, k, degree)
                 initial_w = np.zeros(tx_tr.shape[1])
                 w, loss = reg_logistic_regression(y_tr, tx_tr, lambda_, initial_w, max_iters, gamma)
-                y_pred_tr = predict_labels_logistic(w, tx_tr)
-                loss = accuracy(y_tr, y_pred_tr)
+
+                loss = correct_predictions(y_tr, tx_tr, w)
                 loss_tr.append(loss)
-                y_pred_te = predict_labels_logistic(w, tx_te)
-                loss2 = accuracy(y_te, y_pred_te)
+                loss2 = correct_predictions(y_te, tx_te, w)
                 loss_te.append(loss2)
                 ws.append(w)
+
+            print("Degree {0}, lambda {1}: Accuracy train mean {2} and std {3} ; accuracy test mean {4} and std {5}".format(
+                degree, lambda_, np.mean(loss_tr), np.std(loss_tr), np.mean(loss_te), np.std(loss_te)))
+
             loss_lambdas_te[ind_lamb] = np.mean(loss_te)
             loss_lambdas_tr[ind_lamb] = np.mean(loss_tr)
-            if loss_lambdas_te[ind_lamb] < min_loss:
+
+            if loss_lambdas_te[ind_lamb] > max_acc:
                 min_loss_index = np.argmin(loss_te)
                 w_star = ws[min_loss_index]
-                min_loss = loss_lambdas_te[ind_lamb]
-        ind_min_loss_lamb = np.argmin(loss_lambdas_te)
+                max_acc = loss_lambdas_te[ind_lamb]
+
+        ind_min_loss_lamb = np.argmax(loss_lambdas_te)
         min_lambdas[ind_deg] = lambdas[ind_min_loss_lamb]
         loss_degrees[ind_deg] = loss_lambdas_te[ind_min_loss_lamb]
+
         plt.semilogx(lambdas, loss_lambdas_te, 'b-', label='Test')
         plt.semilogx(lambdas, loss_lambdas_tr, 'r-', label='Train')
         plt.legend(loc='upper left')
-        plt.title('Loss evolution for degree ' + str(degree) + ' in jet ' + str(jet))
+        plt.title('Loss with respect to lambda \n for degree ' + str(degree) + ' in jet ' + str(jet))
         plt.ylabel('Loss')
         plt.xlabel('Lambda')
         plt.savefig('../results/plots/plot_degree_' + str(degree) + '_jet_' + str(jet) + '.png')
@@ -92,11 +104,12 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
             print("For degree {0}, best lambda: {1} with a test loss: {2}".format(degree, min_lambdas[ind_deg],
                                                                                   loss_degrees[ind_deg]))
 
-    ind_min_loss = np.argmin(loss_degrees)
+    ind_min_loss = np.argmax(loss_degrees)
     min_loss = loss_degrees[ind_min_loss]
     best_lambda = min_lambdas[ind_min_loss]
     best_degree = degrees[ind_min_loss]
     plt.plot(degrees, loss_degrees)
+
     plt.title('Minimum losses')
     plt.ylabel('Loss')
     plt.xlabel('Degree')

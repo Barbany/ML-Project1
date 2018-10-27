@@ -5,7 +5,7 @@ default_params = {
     'results_path': '../results',
     'raw_data': '../data',
     'seed': 123,
-    'max_iters': 101,
+    'max_iters': 301,
     'gamma': 1e-7,
     'batch_size': 8,
     'bias': False,

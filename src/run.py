@@ -95,7 +95,7 @@ def main(**params):
                 print('-' * 120)
 
             _, _, best_degree, w_star = cross_validation(yb_jet, input_data_jet, params['k-fold'],
-                                                         lambdas=np.logspace(-10, 0, 6), degrees=range(7, 12),
+                                                         lambdas=np.logspace(-6, 0, 2), degrees=range(5, 9),
                                                          max_iters=params['max_iters'], gamma=params['gamma'],
                                                          verbose=params['verbose'], jet=jet)
 

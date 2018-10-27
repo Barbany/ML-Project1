@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from utils.helpers import batch_iter
-from utils.costs import compute_loss, compute_gradient
+from utils.helpers import batch_iter, predict_labels_logistic, predict_labels
+from utils.costs import compute_loss, compute_gradient, accuracy
 
 
 def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', lambda_=0):
@@ -28,7 +28,7 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', la
     w = initial_w
     loss = None
     losses = []
-    threshold = 1e-3
+    threshold = 1e-5
     for n_iter in range(max_iters):
         loss = compute_loss(y, tx, w, loss_function, lambda_)
         # Compute the gradient for mse loss
@@ -36,8 +36,8 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', la
         w = w - gamma * grad
         #print("Gradient Descent({bi}/{ti}): loss={ls}. grad={grad}".format(
         #    bi=n_iter, ti=max_iters - 1, ls=loss, grad=grad[0:2]))
-        # if n_iter % 100 == 0:
-        #     print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
+        if n_iter % 100 == 0:
+            print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and abs(losses[-1] - losses[-2]) < threshold:
