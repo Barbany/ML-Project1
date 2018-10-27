@@ -35,7 +35,9 @@ def main(**params):
         if params['split_jet']:
             load_csv_split_jet(
                 os.path.join(params['raw_data'], 'train.csv'),
-                os.path.join(params['raw_data'], 'test.csv'), mass=params['split_mass'], verbose=params['verbose'])
+                os.path.join(params['raw_data'], 'test.csv'), results_path, mass=params['split_mass'], outliers=params['outliers'],
+		verbose=params['verbose'])
+            npy_files = [file for file in os.listdir(results_path) if file.endswith(".npz")]
         else:
             yb, input_data, _, _, test_data, test_ids = load_csv_data_no_na(
                 os.path.join(params['raw_data'], 'train.csv'),
@@ -50,15 +52,17 @@ def main(**params):
                 test_data = (test_data - mean_x) / std_x
 
             # Save all values in a unique file. If we did this with the split_jet we could get a Memory Error exception
-            np.savez('processed_data.npz', yb=yb, input_data=input_data, test_data=test_data, test_ids=test_ids)
+            np.savez(os.path.join(results_path, 'processed_data.npz'), yb=yb, input_data=input_data, test_data=test_data, test_ids=test_ids)
 
     # Load data from npz files of separated jets (and mass if parameter set to True)
     if params['split_jet']:
         predictions = []
         ids_prediction = []
-        for file_jet in range(len(npy_files)):
+        for file_jet in npy_files:
+            if params['verbose']:
+                print('Processing file ', file_jet)
             # Load data
-            data = np.load(file_jet)
+            data = np.load(os.join.path(results_path,file_jet))
             yb = data['yb']
             input_data = data['input_data']
             test_data = data['test_data']
