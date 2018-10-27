@@ -13,6 +13,7 @@ def plot_distribution(features, filter_type, path, verbose=False):
     :param filter_type: the type of filtering that was applied to the data
                     (ex none, without NaNs). Used for naming the files
     :param path: the path to save the plots
+    :param verbose: Display information
     :return: void
     """
     print(features.shape)

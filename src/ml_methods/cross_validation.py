@@ -2,7 +2,7 @@ import numpy as np
 
 from ml_methods.implementations import ridge_regression
 from utils.costs import compute_loss
-from utils.helpers import build_poly, build_k_indices
+from utils.helpers import build_poly, build_k_indices, build_poly_cross_terms
 
 from preproc.data_clean import load_csv_data_no_na
 from utils.costs import compute_loss, accuracy
@@ -29,8 +29,8 @@ def get_data_cv(y, x, k_indices, k, degree):
     y_test = y[k_indices[k]]
     y_train = np.delete(y, k_indices[k], axis=0)
 
-    tx_train = build_poly(x_train, degree)
-    tx_test = build_poly(x_test, degree)
+    tx_train = build_poly_cross_terms(x_train, degree)
+    tx_test = build_poly_cross_terms(x_test, degree)
 
     # Standardize test and train with train values for each feature
     # Note that first column is not included since it's the bias term
@@ -60,21 +60,21 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
     :return: minimum loss (min_loss) and optimal value for lambda (best_lambda) and degree (best_degree)
     """
 
-    loss_degrees = np.zeros(len(degrees))
-    min_lambdas = np.zeros(len(degrees))
+    acc_degrees = np.zeros(len(degrees))
+    acc_lambdas = np.zeros(len(degrees))
 
     k_indices = build_k_indices(y, k_fold, seed)
 
-    min_loss = 1e10
+    max_acc = -1
 
     w_star = []
 
     for ind_deg, degree in enumerate(degrees):
-        loss_lambdas_te = np.zeros(len(lambdas))
-        loss_lambdas_tr = np.zeros(len(lambdas))
+        acc_lambdas_te = np.zeros(len(lambdas))
+        acc_lambdas_tr = np.zeros(len(lambdas))
         for ind_lamb, lambda_ in enumerate(lambdas):
-            loss_tr = []
-            loss_te = []
+            acc_tr = []
+            acc_te = []
             ws = []
             for k in range(k_fold):
                 tx_tr, y_tr, tx_te, y_te = get_data_cv(y, x, k_indices, k, degree)
@@ -86,43 +86,47 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
                     w, loss = least_square_sgd(y_tr, tx_tr, initial_w, batch_size, max_iters,
                                                gamma, loss_function=loss_function, lambda_=lambda_)
                 y_pred_tr = predict_labels_logistic(w, tx_tr)
-                loss = accuracy(y_tr, y_pred_tr)
-                loss_tr.append(loss)
+                acc_tr.append(accuracy(y_tr, y_pred_tr))
                 y_pred_te = predict_labels_logistic(w, tx_te)
-                loss2 = accuracy(y_te, y_pred_te)
-                loss_te.append(loss2)
+                acc_te.append(accuracy(y_te, y_pred_te))
                 ws.append(w)
-            loss_lambdas_te[ind_lamb] = np.mean(loss_te)
-            loss_lambdas_tr[ind_lamb] = np.mean(loss_tr)
-            if loss_lambdas_te[ind_lamb] < min_loss:
-                min_loss_index = np.argmin(loss_te)
-                w_star = ws[min_loss_index]
-                min_loss = loss_lambdas_te[ind_lamb]
-        ind_min_loss_lamb = np.argmin(loss_lambdas_te)
-        min_lambdas[ind_deg] = lambdas[ind_min_loss_lamb]
-        loss_degrees[ind_deg] = loss_lambdas_te[ind_min_loss_lamb]
-        plt.plot(lambdas, loss_lambdas_te, 'b-', label='Test')
-        plt.plot(lambdas, loss_lambdas_tr, 'r-', label='Train')
+
+            # Mean across all folds
+            acc_lambdas_te[ind_lamb] = np.mean(acc_te)
+            acc_lambdas_tr[ind_lamb] = np.mean(acc_tr)
+
+            print('With degree ', degree, ' and lambda ', lambda_, ' we obtain an accuracy in test of ',
+                  np.mean(acc_te), '+-', np.std(acc_te))
+
+            if acc_lambdas_te[ind_lamb] > max_acc:
+                w_star = ws[int(np.argmax(acc_te))]
+                max_acc = acc_lambdas_te[ind_lamb]
+
+        ind_max_acc_lamb = np.argmax(acc_lambdas_te)
+        acc_lambdas[ind_deg] = lambdas[ind_max_acc_lamb]
+        acc_degrees[ind_deg] = acc_lambdas_te[ind_max_acc_lamb]
+        plt.plot(lambdas, acc_lambdas_te, 'b-', label='Test')
+        plt.plot(lambdas, acc_lambdas_tr, 'r-', label='Train')
         plt.legend(loc='upper left')
-        plt.title('Loss evolution for degree ' + str(degree) + ' in jet ' + str(jet) + ' with mass'*mass)
-        plt.ylabel('Loss')
+        plt.title('Accuracy evolution for degree ' + str(degree) + ' in jet ' + str(jet) + ' with mass'*mass)
+        plt.ylabel('Accuracy')
         plt.xlabel('Lambda')
         plt.savefig('../results/plots/plot_degree_' + str(degree) + '_jet_' + str(jet) + ' w_mass'*mass + '.png')
         plt.clf()
 
         if verbose:
-            print("For degree {0}, best lambda: {1} with a test loss: {2}".format(degree, min_lambdas[ind_deg],
-                                                                                  loss_degrees[ind_deg]))
+            print("For degree {0}, best lambda: {1} with a test accuracy: {2}".format(degree, acc_lambdas[ind_deg],
+                  acc_degrees[ind_deg]))
 
-    ind_min_loss = np.argmin(loss_degrees)
-    min_loss = loss_degrees[ind_min_loss]
-    best_lambda = min_lambdas[ind_min_loss]
-    best_degree = degrees[ind_min_loss]
-    plt.plot(degrees, loss_degrees)
-    plt.title('Minimum losses')
-    plt.ylabel('Loss')
+    ind_max_acc = np.argmax(acc_degrees)
+    max_acc = acc_degrees[ind_max_acc]
+    best_lambda = acc_lambdas[ind_max_acc]
+    best_degree = degrees[ind_max_acc]
+    plt.plot(degrees, acc_degrees)
+    plt.title('Maximum accuracies')
+    plt.ylabel('Accuracy')
     plt.xlabel('Degree')
-    plt.savefig('../results/plots/plot_min_lambdas_jet_' + str(jet) + '.png')
+    plt.savefig('../results/plots/plot_max_lambdas_jet_' + str(jet) + ' w_mass'*mass + '.png')
     plt.clf()
 
-    return min_loss, best_lambda, best_degree, w_star
+    return max_acc, best_lambda, best_degree, w_star

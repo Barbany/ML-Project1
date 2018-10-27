@@ -10,7 +10,8 @@ default_params = {
     'split_mass': True,
     'loss_function': 'logistic',
     'k-fold': 10,
-    'outliers': True,
+    'outliers': False,
+    'cross_validation': True,
     'pca': False
 }
 

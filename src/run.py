@@ -35,8 +35,9 @@ def main(**params):
         if params['split_jet']:
             load_csv_split_jet(
                 os.path.join(params['raw_data'], 'train.csv'),
-                os.path.join(params['raw_data'], 'test.csv'), results_path, mass=params['split_mass'], outliers=params['outliers'],
-		verbose=params['verbose'])
+                os.path.join(params['raw_data'], 'test.csv'), results_path, mass=params['split_mass'],
+                outliers=params['outliers'], verbose=params['verbose'])
+
             npy_files = [file for file in os.listdir(results_path) if file.endswith(".npz")]
         else:
             yb, input_data, _, _, test_data, test_ids = load_csv_data_no_na(
@@ -61,8 +62,13 @@ def main(**params):
         for file_jet in npy_files:
             if params['verbose']:
                 print('Processing file ', file_jet)
+
+            # Extract information from file name
+            jet = file_jet.split('_')[2][-1]
+            mass = file_jet.split('_')[3] != 'no'
+
             # Load data
-            data = np.load(os.join.path(results_path,file_jet))
+            data = np.load(os.path.join(results_path, file_jet))
             yb = data['yb']
             input_data = data['input_data']
             test_data = data['test_data']
@@ -75,16 +81,17 @@ def main(**params):
             # Train the model
             if params['verbose']:
                 print('-' * 120)
-                print('Start training with jet ', jet)
+                print('Start training with jet ', jet, ' with mass'*mass, 'without mass'*(not mass))
                 print('-' * 120)
 
             if params['cross_validation']:
                 _, best_lambda, best_degree, w_star = cross_validation(yb, input_data, params['k-fold'],
-                                                                       lambdas=np.logspace(-10, 0, 6),
-                                                                       degrees=range(7, 12),
+                                                                       lambdas=np.logspace(-10, 0, 2),
+                                                                       degrees=range(8, 12),
                                                                        max_iters=params['max_iters'],
                                                                        gamma=params['gamma'],
                                                                        verbose=params['verbose'], jet=jet,
+                                                                       mass=mass,
                                                                        loss_function=params['loss_function'])
                 tx_train = build_poly(train_data, best_degree)
                 tx_test = build_poly(test_data, best_degree)
@@ -107,9 +114,9 @@ def main(**params):
                 w_star = reg_logistic_regression(yb, tx_train, lambda_=best_lambda, gamma=params['gamma'],
                                                  max_iters=params['max_iters'], initial_w=np.zeros(tx_tr.shape[1]))
 
-            predictions = predictions + list(predict_labels_logistic(w_star, tx_test, jet=jet,
+            predictions = predictions + list(predict_labels_logistic(w_star, tx_test, jet=file_jet,
                                                                      mass=params['split_mass']))
-            ids_prediction = ids_prediction + list(test_ids[jet])
+            ids_prediction = ids_prediction + list(test_ids)
 
         # Sort predictions according to IDs
         test_ids, y_pred = zip(*sorted(zip(ids_prediction, predictions)))

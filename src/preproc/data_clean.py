@@ -101,34 +101,89 @@ def load_csv_split_jet(train_path, test_path, results_path, nan_indicator=-999, 
         if mass:
             # Don't delete mass column. Separate by data points that have it defined
             remaining_cols[0] = True
-            tx_tr_mass = tx_tr[:, remaining_cols]
-            tx_te_mass = tx_te[:, remaining_cols]
+            tx_tr = tx_tr[:, remaining_cols]
+            tx_te = tx_te[:, remaining_cols]
 
-            tr_no_mass = tx_tr_mass[:, 0] == nan_indicator
-            te_no_mass = tx_te_mass[:, 0] == nan_indicator
+            tr_no_mass = np.isnan(tx_tr[:, 0])
+            te_no_mass = np.isnan(tx_te[:, 0])
 
+            # Data that have NA as mass column
+            y_tr_no_mass = y_tr[tr_no_mass]
+            tx_tr_no_mass = tx_tr[tr_no_mass, 1:]
+
+            tx_te_no_mass = tx_te[te_no_mass, 1:]
+            id_te_no_mass = id_te[te_no_mass]
+
+            # Data that have a real value as mass column
+            y_tr_mass = y_tr[~tr_no_mass]
+            tx_tr_mass = tx_tr[~tr_no_mass, :]
+
+            tx_te_mass = tx_te[~te_no_mass, :]
+            id_te_mass = id_te[~te_no_mass]
+
+            if verbose:
+                print('Length train with mass of jet', jet, ': ', len(y_tr_mass))
+                print('Length train without mass of jet', jet, ': ', len(y_tr_no_mass))
+
+            if outliers:
+                lower_quartile = np.quantile(tx_tr_no_mass, 0.25, axis=0)
+                median = np.quantile(tx_tr_no_mass, 0.5, axis=0)
+                upper_quartile = np.quantile(tx_tr_no_mass, 0.75, axis=0)
+
+                # Equation (1) in report
+                diff_no_outlier_no_mass = (upper_quartile - lower_quartile) * IQR_ratio
+                min_no_outlier_no_mass = median - diff_no_outlier_no_mass
+                max_no_outlier_no_mass = median + diff_no_outlier_no_mass
+
+                entries_no_outliers_no_mass = np.all(np.logical_and(tx_tr_no_mass < max_no_outlier_no_mass,
+                                                     tx_tr_no_mass > min_no_outlier_no_mass), axis=1)
+
+                lower_quartile = np.quantile(tx_tr_mass, 0.25, axis=0)
+                median = np.quantile(tx_tr_mass, 0.5, axis=0)
+                upper_quartile = np.quantile(tx_tr_mass, 0.75, axis=0)
+
+                # Equation (1) in report
+                diff_no_outlier_mass = (upper_quartile - lower_quartile) * IQR_ratio
+                min_no_outlier_mass = median - diff_no_outlier_mass
+                max_no_outlier_mass = median + diff_no_outlier_mass
+
+                entries_no_outliers_mass = np.all(np.logical_and(tx_tr_mass < max_no_outlier_mass,
+                                                  tx_tr_mass > min_no_outlier_mass), axis=1)
+
+                if verbose:
+                    print('Removing ', np.sum(entries_no_outliers_no_mass) * 100 / tx_tr_no_mass.shape[0],
+                          '% of the entries for the NO mass set')
+                    print('Removing ', np.sum(entries_no_outliers_mass) * 100 / tx_tr_mass.shape[0],
+                          '% of the entries for mass set')
+
+                tx_tr_no_mass = tx_tr_no_mass[entries_no_outliers_no_mass, :]
+                tx_tr_mass = tx_tr_mass[entries_no_outliers_mass, :]
+
+            np.savez(os.path.join(results_path, 'processed_data_jet' + str(int(jet)) + '_no_mass.npz'),
+                     yb=y_tr_no_mass, input_data=tx_tr_no_mass,
+                     test_data=tx_te_no_mass, test_ids=id_te_no_mass)
+            np.savez(os.path.join(results_path, 'processed_data_jet' + str(int(jet)) + '_mass.npz'),
+                     yb=y_tr_mass, input_data=tx_tr_mass,
+                     test_data=tx_te_mass, test_ids=id_te_mass)
+        else:
             if outliers:
                 lower_quartile = np.quantile(tx_tr, 0.25, axis=0)
                 median = np.quantile(tx_tr, 0.5, axis=0)
                 upper_quartile = np.quantile(tx_tr, 0.75, axis=0)
 
-	    # Equation (1) in report
-	    diff_no_outlier = (upper_quartile - lower_quartile) * IQR_ratio
-	    min_no_outlier = median - diff_no_outlier
-	    max_no_outlier = median + diff_no_outlier
+                # Equation (1) in report
+                diff_no_outlier = (upper_quartile - lower_quartile) * IQR_ratio
+                min_no_outlier = median - diff_no_outlier
+                max_no_outlier = median + diff_no_outlier
 
-            entries_no_outliers = np.all(np.logical_and(tx_tr < max_no_outlier, tx_tr > min_no_outlier), axis=1)
-            if verbose:
-                print('Removing ', sum(entries_no_outliers) * 100 / tx_tr.shape[1], '% of the entries')
-                tx_tr = tx_tr[entries_no_outliers, :]
+                entries_no_outliers = np.all(np.logical_and(tx_tr < max_no_outlier, tx_tr > min_no_outlier), axis=1)
+                if verbose:
+                    print('Removing ', sum(entries_no_outliers) * 100 / tx_tr.shape[1], '% of the entries')
+                    tx_tr = tx_tr[entries_no_outliers, :]
 
-            np.savez(os.path.join(results_path, 'processed_data_jet' + str(int(jet)) + '_no_mass.npz'), yb=y_tr[tr_no_mass],
-                     input_data=tx_tr[tr_no_mass, :], test_data=tx_te[te_no_mass, :], test_ids=id_te[te_no_mass])
-            np.savez(os.path.join(results_path, 'processed_data_jet' + str(int(jet)) + '_mass.npz'), yb=y_tr[~tr_no_mass],
-                     input_data=tx_tr[~tr_no_mass, :], test_data=tx_te[~te_no_mass, :], test_ids=id_te[~te_no_mass])
-        else:
             # Save features after deleting the ones with one or more NANs
-            np.savez(os.path.join(results_path, 'processed_data_jet' + str(int(jet)) + '.npz'), yb=y_tr, input_data=tx_tr[:, remaining_cols],
+            np.savez(os.path.join(results_path, 'processed_data_jet' + str(int(jet)) + '.npz'),
+                     yb=y_tr, input_data=tx_tr[:, remaining_cols],
                      test_data=tx_te[:, remaining_cols], test_ids=id_te)
 
 

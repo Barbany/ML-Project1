@@ -107,10 +107,30 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
 
 
 def build_poly(x, degree):
-    """polynomial basis functions for input data x, for j=0 up to j=degree."""
+    """Polynomial basis functions for input data x, for j=0 up to j=degree."""
     poly = np.ones((len(x), 1))
     for deg in range(1, degree+1):
         poly = np.c_[poly, np.power(x, deg)]
+    return poly
+
+
+def build_poly_cross_terms(x, degree):
+    """
+    Build a polynomial of a certain degree with crossed terms (applying sum, product and square of product)
+    """
+    features = x.shape[1]
+    # Create powers for each of the features
+    poly = np.ones((len(x), 1))
+    for feat in range(features):
+        for deg in range(1, degree + 1):
+            poly = np.c_[poly, np.power(x[:, feat], deg)]
+
+    # Sum, multiply and features between them
+    for this_feat in range(features):
+        for that_feat in range(this_feat + 1, features):
+            poly = np.c_[poly, x[:, this_feat] + x[:, that_feat],
+                         x[:, this_feat] * x[:, that_feat],
+                         np.power(x[:, this_feat] * x[:, that_feat], 2)]
     return poly
 
 
