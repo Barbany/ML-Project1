@@ -34,10 +34,8 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', la
         # Compute the gradient for mse loss
         grad = compute_gradient(y, tx, w, loss_function, lambda_)
         w = w - gamma * grad
-        #print("Gradient Descent({bi}/{ti}): loss={ls}. grad={grad}".format(
-        #    bi=n_iter, ti=max_iters - 1, ls=loss, grad=grad[0:2]))
-        # if n_iter % 100 == 0:
-        #     print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
+        if n_iter % 50 == 0:
+             print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and abs(losses[-1] - losses[-2]) < threshold:

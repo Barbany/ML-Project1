@@ -64,7 +64,7 @@ def main(**params):
                 print('Processing file ', file_jet)
 
             # Extract information from file name
-            jet = file_jet.split('_')[2][-1]
+            jet = int(file_jet.split('_')[2][-1])
             mass = file_jet.split('_')[3] != 'no'
 
             # Load data
@@ -84,37 +84,45 @@ def main(**params):
                 print('Start training with jet ', jet, ' with mass'*mass, 'without mass'*(not mass))
                 print('-' * 120)
 
-            if params['cross_validation']:
+            if params['cv']:
+                if params['verbose']:
+                    print('Start cross validation')
                 _, best_lambda, best_degree, w_star = cross_validation(yb, input_data, params['k-fold'],
-                                                                       lambdas=np.logspace(-10, 0, 2),
+                                                                       lambdas=np.logspace(-10, -2, 9),
                                                                        degrees=range(8, 12),
                                                                        max_iters=params['max_iters'],
                                                                        gamma=params['gamma'],
                                                                        verbose=params['verbose'], jet=jet,
                                                                        mass=mass,
                                                                        loss_function=params['loss_function'])
-                tx_train = build_poly(train_data, best_degree)
-                tx_test = build_poly(test_data, best_degree)
+                tx_train = build_poly_cross_terms(input_data, best_degree)
+                tx_test = build_poly_cross_terms(test_data, best_degree)
 
                 # Standardize test and train with train values for each feature
                 # Note that first column is not included since it's the bias term
                 _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
                 tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
             else:
-                best_degree = 9
-                best_lambda = 1e2
-                tx_train = build_poly(train_data, best_degree)
-                tx_test = build_poly(test_data, best_degree)
+                best_degree = [12, 9, 7, 9, 10, 9, 8, 2]
+                best_lambda = [1e-5, 1e-2, 1e-5, 1e-4, 1e-6, 1e-4, 1e-5, 1e-10]
+                if params['verbose']:
+                    print('Predict samples for file with jet ', jet, ' and mass'*mass)
+                    print('Build polynomial of cross terms with degree ', best_degree[2*jet + mass])
+                tx_train = build_poly_cross_terms(input_data, best_degree[2*jet + mass])
+                tx_test = build_poly_cross_terms(test_data, best_degree[2*jet + mass])
 
                 # Standardize test and train with train values for each feature
                 # Note that first column is not included since it's the bias term
-                _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
+                tx_train[:, 1:], mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
                 tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
 
-                w_star = reg_logistic_regression(yb, tx_train, lambda_=best_lambda, gamma=params['gamma'],
-                                                 max_iters=params['max_iters'], initial_w=np.zeros(tx_tr.shape[1]))
+                w_star = reg_logistic_regression(yb, tx_train, lambda_=best_lambda[2*jet + mass], gamma=params['gamma'],
+                                                 max_iters=params['max_iters'], initial_w=np.zeros(tx_train.shape[1]))
 
-            predictions = predictions + list(predict_labels_logistic(w_star, tx_test, jet=file_jet,
+            if params['verbose']:
+                print('Predicting samples for jet ', jet, ' with mass'*mass)
+                print('Shape of tx_test is ', tx_test.shape, ' and of w_star is ', w_star.shape)
+            predictions = predictions + list(predict_labels_logistic(w_star, tx_test, jet=jet,
                                                                      mass=params['split_mass']))
             ids_prediction = ids_prediction + list(test_ids)
 

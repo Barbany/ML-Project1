@@ -3,7 +3,7 @@ default_params = {
     'results_path': '../results',
     'raw_data': '../data',
     'seed': 123,
-    'max_iters': 1000,
+    'max_iters': 10,
     'gamma': 1e-7,
     'batch_size': 8,
     'split_jet': True,
@@ -11,7 +11,6 @@ default_params = {
     'loss_function': 'logistic',
     'k-fold': 10,
     'outliers': False,
-    'cross_validation': True,
     'pca': False
 }
 

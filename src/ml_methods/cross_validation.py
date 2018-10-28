@@ -80,10 +80,10 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
                 tx_tr, y_tr, tx_te, y_te = get_data_cv(y, x, k_indices, k, degree)
                 initial_w = np.zeros(tx_tr.shape[1])
                 if batch_size is None:
-                    w, loss = least_square_gd(y_tr, tx_tr, initial_w, max_iters,
+                    w, loss = least_squares_gd(y_tr, tx_tr, initial_w, max_iters,
                                               gamma, loss_function=loss_function, lambda_=lambda_)
                 else:
-                    w, loss = least_square_sgd(y_tr, tx_tr, initial_w, batch_size, max_iters,
+                    w, loss = least_squares_sgd(y_tr, tx_tr, initial_w, batch_size, max_iters,
                                                gamma, loss_function=loss_function, lambda_=lambda_)
                 y_pred_tr = predict_labels_logistic(w, tx_tr)
                 acc_tr.append(accuracy(y_tr, y_pred_tr))
@@ -111,7 +111,7 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
         plt.title('Accuracy evolution for degree ' + str(degree) + ' in jet ' + str(jet) + ' with mass'*mass)
         plt.ylabel('Accuracy')
         plt.xlabel('Lambda')
-        plt.savefig('../results/plots/plot_degree_' + str(degree) + '_jet_' + str(jet) + ' w_mass'*mass + '.png')
+        plt.savefig('../results/plots/plot_degree_' + str(degree) + '_jet_' + str(jet) + '_w_mass'*mass + '.png')
         plt.clf()
 
         if verbose:
