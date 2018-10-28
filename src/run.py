@@ -16,6 +16,8 @@ from utils.file_utils import setup_results_dir, tee_stdout
 
 from ml_methods.cross_validation import cross_validation
 
+from preproc.visualizations import plot_results
+
 
 def main(**params):
     params = dict(
@@ -122,6 +124,7 @@ def main(**params):
 
         y_pred = predict_labels(w, test_data)
 
+    plot_results(y_pred)
     create_csv_submission(test_ids, y_pred, results_path + '/results.csv')
 
 
