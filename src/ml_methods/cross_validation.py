@@ -10,7 +10,7 @@ from ml_methods.implementations import ridge_regression, logistic_regression, re
 from utils.helpers import predict_labels, predict_labels_logistic
 from utils.helpers import standardize, standardize_by_feat
 import matplotlib.pyplot as plt
-import sys
+import sys, os
 
 
 def get_data_cv(y, x, k_indices, k, degree):
@@ -51,6 +51,10 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
     max_acc = 0
 
     w_star = []
+
+    path_plots = '../results/plots/'
+    if not os.path.exists(path_plots):
+        os.makedirs(path_plots)
 
     for ind_deg, degree in enumerate(degrees):
         loss_lambdas_te = np.zeros(len(lambdas))
@@ -94,14 +98,14 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
         plt.semilogx(lambdas, loss_lambdas_te, 'b-', label='Test')
         plt.semilogx(lambdas, loss_lambdas_tr, 'r-', label='Train')
         plt.legend(loc='upper left')
-        plt.title('Loss with respect to lambda \n for degree ' + str(degree) + ' in jet ' + str(jet))
+        plt.title('Accuracy with respect to lambda \n for degree ' + str(degree) + ' in jet ' + str(jet))
         plt.ylabel('Loss')
         plt.xlabel('Lambda')
-        plt.savefig('../results/plots/plot_degree_' + str(degree) + '_jet_' + str(jet) + '.png')
+        plt.savefig(path_plots + 'plot_degree_' + str(degree) + '_jet_' + str(jet) + '.png')
         plt.clf()
 
         if verbose:
-            print("For degree {0}, best lambda: {1} with a test loss: {2}".format(degree, min_lambdas[ind_deg],
+            print("For degree {0}, best lambda: {1} with a test accuracy: {2}".format(degree, min_lambdas[ind_deg],
                                                                                   loss_degrees[ind_deg]))
 
     ind_min_loss = np.argmax(loss_degrees)
@@ -113,7 +117,7 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, seed=123,
     plt.title('Minimum losses')
     plt.ylabel('Loss')
     plt.xlabel('Degree')
-    plt.savefig('../results/plots/plot_min_lambdas_jet_' + str(jet) + '.png')
+    plt.savefig(path_plots + 'plot_min_lambdas_jet_' + str(jet) + '.png')
     plt.clf()
 
     return min_loss, best_lambda, best_degree, w_star

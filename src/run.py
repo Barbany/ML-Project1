@@ -95,7 +95,7 @@ def main(**params):
                 print('-' * 120)
 
             _, _, best_degree, w_star = cross_validation(yb_jet, input_data_jet, params['k-fold'],
-                                                         lambdas=np.logspace(-6, 0, 2), degrees=range(5, 9),
+                                                         lambdas=np.logspace(-4, 0, 5), degrees=range(6, 12),
                                                          max_iters=params['max_iters'], gamma=params['gamma'],
                                                          verbose=params['verbose'], jet=jet)
 
@@ -108,8 +108,8 @@ def main(**params):
             predictions = predictions + list(predict_labels_logistic(w_star, tx_test, jet=jet))
             ids_prediction = ids_prediction + list(test_ids[jet])
 
-        # Sort predictions according to IDs
-        test_ids, y_pred = zip(*sorted(zip(ids_prediction, predictions)))
+            # Sort predictions according to IDs
+            test_ids, y_pred = zip(*sorted(zip(ids_prediction, predictions)))
 
     else:
         # Could we improve by initializing with other configurations? E.g. random
