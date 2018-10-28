@@ -69,10 +69,10 @@ def main(**params):
 
             # Load data
             data = np.load(os.path.join(results_path, file_jet))
-            yb = data['yb']
-            input_data = data['input_data']
-            test_data = data['test_data']
-            test_ids = data['test_ids']
+            yb = np.asarray(data['yb'])
+            input_data = np.asarray(data['input_data'])
+            test_data = np.asarray(data['test_data'])
+            test_ids = np.asarray(data['test_ids'])
 
             if params['loss_function'] == 'logistic':
                 # Convert labels to {0, 1} instead of {-1, 1}
@@ -103,7 +103,7 @@ def main(**params):
                 _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
                 tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
             else:
-                best_degree = [12, 9, 7, 9, 10, 9, 8, 2]
+                best_degree = [12, 2, 7, 9, 10, 9, 8, 9]
                 best_lambda = [1e-5, 1e-2, 1e-5, 1e-4, 1e-6, 1e-4, 1e-5, 1e-10]
                 if params['verbose']:
                     print('Predict samples for file with jet ', jet, ' and mass'*mass)
