@@ -36,6 +36,9 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', la
         w = w - gamma * grad
         if n_iter % 50 == 0:
              print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
+        if n_iter % 2000 == 0:
+            # Adaptive learning rate
+            gamma = gamma*0.1
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and abs(losses[-1] - losses[-2]) < threshold:

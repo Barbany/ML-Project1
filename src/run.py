@@ -103,7 +103,7 @@ def main(**params):
                 _, mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
                 tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
             else:
-                best_degree = [12, 2, 7, 9, 10, 9, 8, 9]
+                best_degree = [12, 9, 7, 9, 10, 9, 8, 9]
                 best_lambda = [1e-5, 1e-2, 1e-5, 1e-4, 1e-6, 1e-4, 1e-5, 1e-10]
                 if params['verbose']:
                     print('Predict samples for file with jet ', jet, ' and mass'*mass)
@@ -116,13 +116,13 @@ def main(**params):
                 tx_train[:, 1:], mean_x, std_x = standardize_by_feat(tx_train[:, 1:])
                 tx_test[:, 1:] = (tx_test[:, 1:] - mean_x) / std_x
 
-                w_star = reg_logistic_regression(yb, tx_train, lambda_=best_lambda[2*jet + mass], gamma=params['gamma'],
+                w_star, _ = reg_logistic_regression(yb, tx_train, lambda_=best_lambda[2*jet + mass], gamma=params['gamma'],
                                                  max_iters=params['max_iters'], initial_w=np.zeros(tx_train.shape[1]))
 
             if params['verbose']:
                 print('Predicting samples for jet ', jet, ' with mass'*mass)
-                print('Shape of tx_test is ', tx_test.shape, ' and of w_star is ', w_star.shape)
-            predictions = predictions + list(predict_labels_logistic(w_star, tx_test, jet=jet,
+
+            predictions = predictions + list(predict_labels_logistic(w_star, np.asarray(tx_test), jet=jet,
                                                                      mass=params['split_mass']))
             ids_prediction = ids_prediction + list(test_ids)
 
