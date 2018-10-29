@@ -61,7 +61,7 @@ def accuracy(y_true, y_pred):
     :param y_true: Ground truth, i.e. labels
     :param y_pred: Predictions (same size as y_true)
     """
-    return sum([1 for i in range(len(y_true)) if y_pred[i] != y_true[i]]) / len(y_true)
+    return np.sum(y_pred == y_true) / len(y_true)
 
 
 def compute_gradient(y, tx, w, loss_function='mse', lambda_=0):
