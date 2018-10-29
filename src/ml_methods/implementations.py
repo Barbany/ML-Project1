@@ -35,10 +35,10 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', la
         grad = compute_gradient(y, tx, w, loss_function, lambda_)
         w = w - gamma * grad
         if n_iter % 50 == 0:
-            print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
-        if n_iter % 2000 == 0:
-            # Adaptive learning rate
-            gamma = gamma*0.1
+            print("Current iteration of GD = {i}, loss={l}".format(i=n_iter, l=loss))
+            if n_iter % 2000 == 0:
+                # Adaptive learning rate
+                gamma = gamma*0.1
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and abs(losses[-1] - losses[-2]) < threshold:
@@ -72,8 +72,8 @@ def least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, loss_funct
         loss = compute_loss(minibatch_y, minibatch_tx, w, loss_function, lambda_)
         # Compute a stochastic gradient from just few examples n and their corresponding y_n labels
         w = w - gamma * compute_gradient(minibatch_y, minibatch_tx, w, loss_function, lambda_)
-        print("Stochastic Gradient Descent({bi}/{ti}): loss={ls}, w0={w0}, w1={w1}".format(
-            bi=n_iter, ti=max_iters - 1, ls=loss, w0=w[0], w1=w[1]))
+        if n_iter % 50 == 0:
+            print("Current iteration of SGD = {i}: loss={ls}".format(i=n_iter, ls=loss))
         n_iter = n_iter + 1
     return w, loss
 
@@ -87,7 +87,9 @@ def least_squares(y, tx):
     """
     a = tx.T.dot(tx)
     b = tx.T.dot(y)
-    return np.linalg.solve(a, b)
+    w = np.linalg.solve(a, b)
+    loss = compute_loss(y, tx)
+    return w, loss
 
 
 def ridge_regression(y, tx, lambda_):
@@ -100,7 +102,9 @@ def ridge_regression(y, tx, lambda_):
     """
     a = np.dot(np.transpose(tx), tx) + 2*tx.shape[0]*lambda_*np.identity(tx.shape[1])
     b = np.dot(np.transpose(tx), y)
-    return np.linalg.solve(a, b)
+    w = np.linalg.solve(a, b)
+    loss = compute_loss(y, tx, lambda_=lambda_)
+    return w, loss
 
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma, batch_size=None):
