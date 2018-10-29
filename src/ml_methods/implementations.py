@@ -1,4 +1,4 @@
-"""Implementation of the methods seen in class and in the labs"""
+"""Implementation of the methods seen in class and in the labs."""
 
 import numpy as np
 

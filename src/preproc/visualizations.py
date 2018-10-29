@@ -1,5 +1,5 @@
+"""Functions to visualize distribution of the features after removing outliers."""
 import matplotlib.pyplot as plt
-import pathlib
 import numpy as np
 
 
@@ -16,7 +16,6 @@ def plot_distribution(features, filter_type, verbose=False, iqr_ratio=3):
     or adding the inter-quartile range times this ratio to the median. Default value is 3 (Tukey 1977)
     :return: void
     """
-    print(features.shape)
 
     for feat_no, feature in enumerate(features):
         # Compute quartiles
@@ -35,5 +34,5 @@ def plot_distribution(features, filter_type, verbose=False, iqr_ratio=3):
         plt.show()
         if verbose:
             print('Min is ', min_no_outlier, ' and max ', max_no_outlier)
-            print('Obviating ', (sum(feature < min_no_outlier) + sum(feature > max_no_outlier)) * 100 / len(feature),
+            print('Obviating ', (np.sum(feature < min_no_outlier) + np.sum(feature > max_no_outlier)) * 100 / len(feature),
                   '% of features for feature', feat_no, ' ', filter_type)

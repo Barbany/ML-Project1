@@ -1,11 +1,8 @@
-import numpy as np
+"""Functions to perform k-fold cross-validation."""
 import matplotlib.pyplot as plt
-import sys
 
-from utils.costs import compute_loss, accuracy
+from utils.costs import accuracy
 from utils.helpers import *
-
-from preproc.data_clean import load_csv_data_no_na
 
 from ml_methods.implementations import *
 

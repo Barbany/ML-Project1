@@ -7,7 +7,7 @@ import os
 from utils.helpers import load_csv_data, standardize
 
 
-def load_csv_data_no_na(train_path, test_path, na_indicator=-999, verbose=False):
+def load_csv_data_no_nan(train_path, test_path, na_indicator=-999, verbose=False):
     """
     Load raw data and eliminate NAs indicated with a certain numeric value
     Returns data without the contaminated features

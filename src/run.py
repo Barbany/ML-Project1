@@ -1,10 +1,6 @@
 """Main function of the project. Execute it with the appropriate arguments to perform training of a linear model
 with given constraints."""
 
-import os
-
-import numpy as np
-
 from preproc.data_clean import *
 from preproc.visualizations import plot_distribution
 
@@ -85,7 +81,7 @@ def main(**params):
 
             # Visualize the histogram of data without outliers
             if params['visualize']:
-                plot_distribution(input_data[jet].T, 'jet_filtering_' + str(jet) + '_mass'*mass, verbose=True)
+                plot_distribution(input_data.T, 'jet_filtering_' + str(jet) + '_mass'*mass, verbose=True)
 
             # Logistic regression uses sigmoid, which goes from 0 to 1
             if params['loss_function'] == 'logistic':
