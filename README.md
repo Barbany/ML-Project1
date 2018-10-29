@@ -3,6 +3,10 @@
 Machine Learning algorithm without external libraries to find the Higgs boson using original data from CERN (Kaggle challenge). First project for Machine Learning course (CS-443) at EPFL.
 
 * [Getting started](#getting-started)
+    * [Data](#data)
+    * [Documentation](#documentation)
+    * [Dependencies](#dependencies)
+    * [Report](#report)
 * [Running the code](#running-the-code)
 
 ## Getting started
