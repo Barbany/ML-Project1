@@ -9,7 +9,7 @@ from preproc.data_clean import *
 from preproc.visualizations import plot_distribution
 
 from utils.helpers import *
-from utils.argument_parser import parse_arguments
+from utils.argument_parser import parse_arguments, default_params
 from utils.file_utils import setup_results_dir, tee_stdout
 
 from ml_methods.cross_validation import cross_validation
