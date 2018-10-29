@@ -7,7 +7,7 @@ Machine Learning algorithm without external libraries to find the Higgs boson us
 
 ## Getting started
 #### Data
-The raw data can be downloaded form the webpage of the Kaggle challenge: https://www.kaggle.com/c/epfml18-higgs. The default directory to locate the uncompressed `csv` files is `data/`, which is an empty folder by now. Nevertheless, you can change this location by modifying the default parameters located in the file `src/utils/argument_parser.py` and use your own path.
+The raw data can be downloaded form the webpage of the Kaggle challenge: https://www.kaggle.com/c/epfml18-higgs. The default directory to locate the uncompressed .csv files is `data/`, which is an empty folder by now. Nevertheless, you can change this location by modifying the default parameters located in the file `src/utils/argument_parser.py` and use your own path.
 
 The processed data as well as a log of all prints will be located in a folder named `results/experiment_name/`, where the `experiment_name` keyword will be substituted by a string that indicates the parameters of the experiment that affect data processing. This means that the original files downloaded from Kaggle must remain unchanged.
 
@@ -15,7 +15,7 @@ The processed data as well as a log of all prints will be located in a folder na
 The root of the project have a `doc/` directory where you can find the guidelines of the project given by EPFL professors as well as a the explanation of the dataset. Check this to know more about the features and they relations. Note that this file has some of the lines of appendix B higlighted to justify one of the key improvements of the dataset to handle meaning-less data.
 
 #### Dependencies
-For the first time you can create your environment by installing all dependencies listed in the file `requirements.txt`. Note that the needed libraries are very basic because the machine learning methods used in this project are implemented in this same repository. You will therefore probably have them installed but make sure to satisfy the version requirement of `numpy`because we use the function quartiles, which was not included in early releases.
+For the first time you can create your environment by installing all dependencies listed in the file `requirements.txt`. Note that the needed libraries are very basic because the machine learning methods used in this project are implemented in this same repository. You will therefore probably have them installed but make sure to satisfy the version requirement of numpy because we use the function quartiles, which was not included in early releases.
 
 #### Report
 Check our paper located at the `report/` folder to have an overview of the project and the justification of all the steps that leaded us to a model with the final accuracy presented in the Kaggle competition.
