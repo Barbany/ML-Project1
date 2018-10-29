@@ -33,3 +33,5 @@ The main call can also include several arguments that will condition the experim
 
     python run.py -h
     python run.py --help
+
+Note that there are two options by default that are splitting by jets and by mass features. You can split the data by jets and then don't split it again by mass but not in the reverse case.
