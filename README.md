@@ -24,7 +24,7 @@ The root of the project have a `doc/` directory where you can find the guideline
 For the first time you can create your environment by installing all dependencies listed in the file `requirements.txt`. Note that the needed libraries are very basic because the machine learning methods used in this project are implemented in this same repository. You will therefore probably have them installed but make sure to satisfy the version requirement of numpy because we use the function quartiles, which was not included in early releases.
 
 #### Report
-Check our paper located at the `report/` folder to have an overview of the project and the justification of all the steps that leaded us to a model with the final accuracy presented in the Kaggle competition.
+Check our paper located at the `report/` folder to have an overview of the project and to take a look at the justification of all the steps that led us to a model with the final accuracy presented in the Kaggle competition.
 
 ## Running the code
 Move to the root folder and execute:
