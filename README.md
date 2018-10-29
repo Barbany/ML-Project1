@@ -2,6 +2,8 @@
 
 Machine Learning algorithm without external libraries to find the Higgs boson using original data from CERN (Kaggle challenge). First project for Machine Learning course (CS-443) at EPFL.
 
+This algorithm obtained a categorization accuracy of 0.82.
+
 * [Getting started](#getting-started)
     * [Data](#data)
     * [Documentation](#documentation)
