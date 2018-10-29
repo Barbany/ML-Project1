@@ -85,10 +85,10 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
                 # Perform iterative optimization (either GD or SGD depending on whether if batch_size is specified)
                 if batch_size is None:
                     w, loss = least_squares_gd(y_tr, tx_tr, initial_w, max_iters,
-                                               gamma, loss_function=loss_function, lambda_=lambda_)
+                                               gamma, loss_function=loss_function, lambda_=lambda_, verbose=verbose)
                 else:
                     w, loss = least_squares_sgd(y_tr, tx_tr, initial_w, batch_size, max_iters,
-                                                gamma, loss_function=loss_function, lambda_=lambda_)
+                                                gamma, loss_function=loss_function, lambda_=lambda_, verbose=verbose)
 
                 # Predict labels and obtain accuracies for both train and test
                 y_pred_tr = predict_labels_logistic(w, tx_tr)
@@ -102,9 +102,9 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
             # Mean across all folds
             acc_lambdas_te[ind_lamb] = np.mean(acc_te)
             acc_lambdas_tr[ind_lamb] = np.mean(acc_tr)
-
-            print('With degree ', degree, ' and lambda ', lambda_, ' we obtain an accuracy in test of ',
-                  np.mean(acc_te), '+-', np.std(acc_te))
+            if verbose:
+                print('With degree ', degree, ' and lambda ', lambda_, ' we obtain an accuracy in test of ',
+                      np.mean(acc_te), '+-', np.std(acc_te))
 
             if acc_lambdas_te[ind_lamb] > max_acc:
                 w_star = ws[int(np.argmax(acc_te))]

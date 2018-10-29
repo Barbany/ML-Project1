@@ -6,7 +6,7 @@ from utils.helpers import batch_iter
 from utils.costs import compute_loss, compute_gradient
 
 
-def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', lambda_=0):
+def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', lambda_=0, verbose=False):
     """Gradient descent algorithm
 
     :param y: 1-D Array of labels
@@ -34,11 +34,12 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', la
         # Compute the gradient for mse loss
         grad = compute_gradient(y, tx, w, loss_function, lambda_)
         w = w - gamma * grad
-        if n_iter % 50 == 0:
-            print("Current iteration of GD = {i}, loss={l}".format(i=n_iter, l=loss))
-            if n_iter % 2000 == 0:
-                # Adaptive learning rate
-                gamma = gamma*0.1
+        if verbose:
+            if n_iter % 50 == 0:
+                print("Current iteration of GD={i}, loss={l}".format(i=n_iter, l=loss))
+                if n_iter % 2000 == 0:
+                    # Adaptive learning rate
+                    gamma = gamma*0.1
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and abs(losses[-1] - losses[-2]) < threshold:
@@ -46,7 +47,7 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', la
     return w, loss
 
 
-def least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, loss_function='mse', lambda_=0):
+def least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, loss_function='mse', lambda_=0, verbose=False):
     """Stochastic Gradient descent algorithm
 
     :param y: 1-D Array of labels
@@ -72,8 +73,9 @@ def least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, loss_funct
         loss = compute_loss(minibatch_y, minibatch_tx, w, loss_function, lambda_)
         # Compute a stochastic gradient from just few examples n and their corresponding y_n labels
         w = w - gamma * compute_gradient(minibatch_y, minibatch_tx, w, loss_function, lambda_)
-        if n_iter % 50 == 0:
-            print("Current iteration of SGD = {i}: loss={ls}".format(i=n_iter, ls=loss))
+        if verbose:
+            if n_iter % 50 == 0:
+                print("Current iteration of SGD={i}: loss={ls}".format(i=n_iter, ls=loss))
         n_iter = n_iter + 1
     return w, loss
 
@@ -107,7 +109,7 @@ def ridge_regression(y, tx, lambda_):
     return w, loss
 
 
-def logistic_regression(y, tx, initial_w, max_iters, gamma, batch_size=None):
+def logistic_regression(y, tx, initial_w, max_iters, gamma, batch_size=None, verbose=False):
     """Logistic regression with gradient descent (if no batch argument) or SGD
 
     :param y: labels
@@ -119,12 +121,12 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma, batch_size=None):
     :return: w, loss (Last weights and loss)
     """
     if batch_size is None:
-        return least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='logistic')
+        return least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='logistic', verbose=verbose)
     else:
-        return least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, loss_function='logistic')
+        return least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma, loss_function='logistic', verbose=verbose)
 
 
-def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma, batch_size=None):
+def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma, batch_size=None, verbose=False):
     """Regularized logistic regression.
 
     :param y: labels
@@ -138,7 +140,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma, batch_s
     """
     if batch_size is None:
         return least_squares_gd(y, tx, initial_w, max_iters, gamma,
-                                loss_function='logistic', lambda_=lambda_)
+                                loss_function='logistic', lambda_=lambda_, verbose=verbose)
     else:
         return least_squares_sgd(y, tx, initial_w, batch_size, max_iters, gamma,
-                                 loss_function='logistic', lambda_=lambda_)
+                                 loss_function='logistic', lambda_=lambda_, verbose=verbose)

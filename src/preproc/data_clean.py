@@ -158,7 +158,10 @@ def load_csv_split_jet(train_path, test_path, results_path, nan_indicator=-999, 
                     print('Removing ', np.sum(entries_no_outliers_mass) * 100 / tx_tr_mass.shape[0],
                           '% of the entries for mass set')
 
+                y_tr_no_mass = y_tr_no_mass[entries_no_outliers_no_mass]
                 tx_tr_no_mass = tx_tr_no_mass[entries_no_outliers_no_mass, :]
+
+                y_tr_mass = y_tr_mass[entries_no_outliers_mass]
                 tx_tr_mass = tx_tr_mass[entries_no_outliers_mass, :]
 
             np.savez(os.path.join(results_path, 'processed_data_jet' + str(int(jet)) + '_no_mass.npz'),
@@ -174,7 +177,7 @@ def load_csv_split_jet(train_path, test_path, results_path, nan_indicator=-999, 
                 upper_quartile = np.quantile(tx_tr, 0.75, axis=0)
 
                 # Equation (1) in report
-                diff_no_outlier = (upper_quartile - lower_quartile) * IQR_ratio
+                diff_no_outlier = (upper_quartile - lower_quartile) * iqr_ratio
                 min_no_outlier = median - diff_no_outlier
                 max_no_outlier = median + diff_no_outlier
 

@@ -60,6 +60,14 @@ def main(**params):
             np.savez(os.path.join(results_path, 'processed_data.npz'), yb=yb, input_data=input_data,
                      test_data=test_data, test_ids=test_ids)
 
+    elif not params['split_jet']:
+        # Load data. Note that in this case we only have one file
+        data = np.load(os.path.join(results_path, npy_files[0]))
+        yb = data['yb']
+        input_data = data['input_data']
+        test_data = data['test_data']
+        test_ids = data['test_ids']
+
     # Load data from npz files of separated jets (and mass if parameter set to True)
     if params['split_jet']:
         predictions = []
@@ -138,7 +146,7 @@ def main(**params):
                 # Perform regularized logistic regression with optimal values
                 w_star, _ = reg_logistic_regression(yb, tx_train, lambda_=best_lambda[2*jet + mass],
                                                     gamma=params['gamma'], max_iters=params['max_iters'],
-                                                    initial_w=initial_w)
+                                                    initial_w=initial_w, verbose=params['verbose'])
 
             if params['verbose']:
                 print('Predicting samples for jet ', jet, ' with mass'*mass)
@@ -151,12 +159,6 @@ def main(**params):
         test_ids, y_pred = zip(*sorted(zip(ids_prediction, predictions)))
 
     else:
-        # Load data
-        data = np.load(npy_files)
-        yb = data['yb']
-        input_data = data['input_data']
-        test_data = data['test_data']
-        test_ids = data['test_ids']
 
         # Visualize the histogram of data without outliers
         if params['visualize']:
@@ -168,7 +170,7 @@ def main(**params):
         # Train the model
         w, loss = least_squares_sgd(yb, input_data, initial_w, batch_size=params['batch_size'],
                                     max_iters=params['max_iters'], gamma=params['gamma'],
-                                    loss_function=params['loss_function'])
+                                    loss_function=params['loss_function'], verbose=params['verbose'])
 
         y_pred = predict_labels(w, test_data)
 
