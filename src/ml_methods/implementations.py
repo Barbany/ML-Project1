@@ -90,7 +90,7 @@ def least_squares(y, tx):
     a = tx.T.dot(tx)
     b = tx.T.dot(y)
     w = np.linalg.solve(a, b)
-    loss = compute_loss(y, tx)
+    loss = compute_loss(y, tx, w)
     return w, loss
 
 
@@ -105,7 +105,7 @@ def ridge_regression(y, tx, lambda_):
     a = np.dot(np.transpose(tx), tx) + 2*tx.shape[0]*lambda_*np.identity(tx.shape[1])
     b = np.dot(np.transpose(tx), y)
     w = np.linalg.solve(a, b)
-    loss = compute_loss(y, tx, lambda_=lambda_)
+    loss = compute_loss(y, tx, w, lambda_=lambda_)
     return w, loss
 
 
