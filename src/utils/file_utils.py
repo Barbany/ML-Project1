@@ -1,10 +1,15 @@
+"""Function used to create results folder and save a log of all prints."""
+
 import os
 import sys
 
-from parameters import tag_params
-
 
 def make_tag(params):
+    """Return string which will be used as folder name with all tag_params and their value"""
+    tag_params = [
+        'pca', 'loss_function', 'split_jet', 'split_mass', 'outliers', 'correlation'
+    ]
+
     def to_string(value):
         if isinstance(value, bool):
             return 'T' if value else 'F'
@@ -20,6 +25,7 @@ def make_tag(params):
 
 
 def setup_results_dir(params):
+    """Create results folder if it doesn't exist and get its path"""
     def ensure_dir_exists(path):
         if not os.path.exists(path):
             os.makedirs(path)
@@ -35,6 +41,7 @@ def setup_results_dir(params):
 
 
 def tee_stdout(log_path):
+    """Functions to write the log file situated in the results folder"""
     log_file = open(log_path, 'w', 1)
     stdout = sys.stdout
 
