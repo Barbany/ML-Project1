@@ -125,7 +125,7 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
         plt.title('Accuracy evolution for degree ' + str(degree) + ' in jet ' + str(jet) + ' with mass'*mass)
         plt.ylabel('Accuracy')
         plt.xlabel('Lambda')
-        plt.savefig('../results/plots/plot_degree_' + str(degree) + '_jet_' + str(jet) + '_w_mass'*mass + '.png')
+        plt.show()
         plt.clf()
 
         if verbose:
@@ -143,7 +143,7 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
     plt.title('Maximum accuracies')
     plt.ylabel('Accuracy')
     plt.xlabel('Degree')
-    plt.savefig('../results/plots/plot_max_lambdas_jet_' + str(jet) + ' w_mass'*mass + '.png')
+    plt.show()
     plt.clf()
 
     return max_acc, best_lambda, best_degree, w_star
