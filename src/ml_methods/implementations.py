@@ -35,7 +35,7 @@ def least_squares_gd(y, tx, initial_w, max_iters, gamma, loss_function='mse', la
         grad = compute_gradient(y, tx, w, loss_function, lambda_)
         w = w - gamma * grad
         if n_iter % 50 == 0:
-             print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
+            print("Current iteration={i}, loss={l}".format(i=n_iter, l=loss))
         if n_iter % 2000 == 0:
             # Adaptive learning rate
             gamma = gamma*0.1

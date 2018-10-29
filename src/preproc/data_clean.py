@@ -40,7 +40,7 @@ def load_csv_data_no_na(train_path, test_path, na_indicator=-999, verbose=False)
 
 
 def load_csv_split_jet(train_path, test_path, results_path, nan_indicator=-999, mass=False, outliers=False,
-                       verbose=False, categorical_col=22, IQR_ratio=3):
+                       verbose=False, categorical_col=22, iqr_ratio=3):
     """"
     Load raw data by splitting depending on the 'PRI_jet_num', which determines the existence of some
     other features according to the explanation of the dataset included in
@@ -54,6 +54,8 @@ def load_csv_split_jet(train_path, test_path, results_path, nan_indicator=-999, 
     :param outliers: Remove outliers based on outer fence approach (optional). Default value = False
     :param verbose: Print number of NANs for each feature (optional). Default value = False
     :param categorical_col: Number of column where the categorical feature, in this case Jet, conditions the others
+    :param iqr_ratio: Inter-quartile ratio. This defines the expected minimum and maximum by respectively subtracting
+    or adding the inter-quartile range times this ratio to the median. Default value is 3 (Tukey 1977)
     :return: labels_tr, features_tr, ids_tr, labels_te, features_te, ids_te
     (All output variables are lists where each element is a the labels, features and IDs of a given jet)
     """
@@ -131,7 +133,7 @@ def load_csv_split_jet(train_path, test_path, results_path, nan_indicator=-999, 
                 upper_quartile = np.quantile(tx_tr_no_mass, 0.75, axis=0)
 
                 # Equation (1) in report
-                diff_no_outlier_no_mass = (upper_quartile - lower_quartile) * IQR_ratio
+                diff_no_outlier_no_mass = (upper_quartile - lower_quartile) * iqr_ratio
                 min_no_outlier_no_mass = median - diff_no_outlier_no_mass
                 max_no_outlier_no_mass = median + diff_no_outlier_no_mass
 
@@ -143,7 +145,7 @@ def load_csv_split_jet(train_path, test_path, results_path, nan_indicator=-999, 
                 upper_quartile = np.quantile(tx_tr_mass, 0.75, axis=0)
 
                 # Equation (1) in report
-                diff_no_outlier_mass = (upper_quartile - lower_quartile) * IQR_ratio
+                diff_no_outlier_mass = (upper_quartile - lower_quartile) * iqr_ratio
                 min_no_outlier_mass = median - diff_no_outlier_mass
                 max_no_outlier_mass = median + diff_no_outlier_mass
 
@@ -224,15 +226,15 @@ def pca(features_tr, features_te, threshold=1e-4, verbose=False):
 
 def correlation_coefficient(features, threshold=0.9, visualize=False):
     """
-        Finds the Pearson correlation coefficients between the features.
-        High correlated features imply that the features are highly linked, so one of them is removed.
-        :param features: Matrix of features (input_data output argument of load_csv_data_no_na).
-               Shape = (x, num_features)
-        :param threshold: Minimum correlation. Features with correlation above the threshold will be removed.
-                          Default value = 0.9
-        :param visualize: Print information of each eigenvalue and its percentage of contribution
-        :return: uncorrelated_features (Shape = (x, num_new_features) Note that num_new_features <= num_features),
-        """
+    Finds the Pearson correlation coefficients between the features.
+    High correlated features imply that the features are highly linked, so one of them is removed.
+    :param features: Matrix of features (input_data output argument of load_csv_data_no_na).
+           Shape = (x, num_features)
+    :param threshold: Minimum correlation. Features with correlation above the threshold will be removed.
+                      Default value = 0.9
+    :param visualize: Print information of each eigenvalue and its percentage of contribution
+    :return: uncorrelated_features (Shape = (x, num_new_features) Note that num_new_features <= num_features),
+    """
     features, _, _ = standardize(features)
 
     # calculate the transpose matrix to find the correlated array of shape (#features, #features)

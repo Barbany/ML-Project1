@@ -1,16 +1,13 @@
 import numpy as np
-
-from ml_methods.implementations import ridge_regression
-from utils.costs import compute_loss
-from utils.helpers import build_poly, build_k_indices, build_poly_cross_terms
-
-from preproc.data_clean import load_csv_data_no_na
-from utils.costs import compute_loss, accuracy
-from ml_methods.implementations import *
-from utils.helpers import predict_labels, predict_labels_logistic
-from utils.helpers import standardize, standardize_by_feat
 import matplotlib.pyplot as plt
 import sys
+
+from utils.costs import compute_loss, accuracy
+from utils.helpers import *
+
+from preproc.data_clean import load_csv_data_no_na
+
+from ml_methods.implementations import *
 
 
 def get_data_cv(y, x, k_indices, k, degree):
@@ -57,9 +54,11 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
     :param verbose: Print information
     :param jet: Number of jet if we are using it
     :param mass: Boolean indicating if we are splitting with mass
-    :return: minimum loss (min_loss) and optimal value for lambda (best_lambda) and degree (best_degree)
+    :return: max_acc, best_lambda, best_degree, w_star:
+    Respectively maximum accuracy, optimal value for lambda, optimum degree and weights corresponding to optimal setup
     """
 
+    # Define empty arrays of accuracies by degree and by lambdas
     acc_degrees = np.zeros(len(degrees))
     acc_lambdas = np.zeros(len(degrees))
 
@@ -70,25 +69,37 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
     w_star = []
 
     for ind_deg, degree in enumerate(degrees):
+        # Initialize current accuracies for train and test
         acc_lambdas_te = np.zeros(len(lambdas))
         acc_lambdas_tr = np.zeros(len(lambdas))
+
+        # Loop all possible regularizer factors
         for ind_lamb, lambda_ in enumerate(lambdas):
             acc_tr = []
             acc_te = []
             ws = []
             for k in range(k_fold):
+                # Create train and test data with k-fold
                 tx_tr, y_tr, tx_te, y_te = get_data_cv(y, x, k_indices, k, degree)
+
+                # Initialize weights as zeros
                 initial_w = np.zeros(tx_tr.shape[1])
+
+                # Perform iterative optimization (either GD or SGD depending on whether if batch_size is specified)
                 if batch_size is None:
                     w, loss = least_squares_gd(y_tr, tx_tr, initial_w, max_iters,
-                                              gamma, loss_function=loss_function, lambda_=lambda_)
+                                               gamma, loss_function=loss_function, lambda_=lambda_)
                 else:
                     w, loss = least_squares_sgd(y_tr, tx_tr, initial_w, batch_size, max_iters,
-                                               gamma, loss_function=loss_function, lambda_=lambda_)
+                                                gamma, loss_function=loss_function, lambda_=lambda_)
+
+                # Predict labels and obtain accuracies for both train and test
                 y_pred_tr = predict_labels_logistic(w, tx_tr)
                 acc_tr.append(accuracy(y_tr, y_pred_tr))
                 y_pred_te = predict_labels_logistic(w, tx_te)
                 acc_te.append(accuracy(y_te, y_pred_te))
+
+                # Store weight after optimization
                 ws.append(w)
 
             # Mean across all folds
@@ -102,9 +113,12 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
                 w_star = ws[int(np.argmax(acc_te))]
                 max_acc = acc_lambdas_te[ind_lamb]
 
+        # Find optimum value of regularizer factor
         ind_max_acc_lamb = np.argmax(acc_lambdas_te)
         acc_lambdas[ind_deg] = lambdas[ind_max_acc_lamb]
         acc_degrees[ind_deg] = acc_lambdas_te[ind_max_acc_lamb]
+
+        # Plot evolution depending on regularizer factor for a given degree
         plt.plot(lambdas, acc_lambdas_te, 'b-', label='Test')
         plt.plot(lambdas, acc_lambdas_tr, 'r-', label='Train')
         plt.legend(loc='upper left')
@@ -118,10 +132,13 @@ def cross_validation(y, x, k_fold, lambdas, degrees, max_iters, gamma, loss_func
             print("For degree {0}, best lambda: {1} with a test accuracy: {2}".format(degree, acc_lambdas[ind_deg],
                   acc_degrees[ind_deg]))
 
+    # Find optimum values for both degree and regularizer factor
     ind_max_acc = np.argmax(acc_degrees)
     max_acc = acc_degrees[ind_max_acc]
     best_lambda = acc_lambdas[ind_max_acc]
     best_degree = degrees[ind_max_acc]
+
+    # Plot evolution depending on the degree for the best regularizer factor
     plt.plot(degrees, acc_degrees)
     plt.title('Maximum accuracies')
     plt.ylabel('Accuracy')

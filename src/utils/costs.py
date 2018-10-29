@@ -26,6 +26,13 @@ def compute_loss(y, tx, w, loss_function='mse', lambda_=0):
 
 
 def logistic(y, tx, w, lambda_):
+    """
+    Compute common logistic loss
+    :param y: labels
+    :param tx: features
+    :param w: weights
+    :param lambda_: Regularizer factor
+    """
     in_pred = tx.dot(w)
     pred = sigmoid(in_pred)
     loss = y.T.dot(np.log(pred)) + (1 - y).T.dot(np.log(1 - pred))
@@ -33,6 +40,13 @@ def logistic(y, tx, w, lambda_):
 
 
 def logistic_2(y, tx, w, lambda_):
+    """
+    Compute logistic loss with thresholds to avoid computational overflow
+    :param y: labels
+    :param tx: features
+    :param w: weights
+    :param lambda_: Regularizer factor
+    """
     in_pred = tx.dot(w)
     in_pred[in_pred >= 10] = 10
     in_pred[in_pred <= -10] = -10
@@ -42,6 +56,11 @@ def logistic_2(y, tx, w, lambda_):
 
 
 def accuracy(y_true, y_pred):
+    """
+    Compute the percentage of well-predicted labels
+    :param y_true: Ground truth, i.e. labels
+    :param y_pred: Predictions (same size as y_true)
+    """
     return sum([1 for i in range(len(y_true)) if y_pred[i] != y_true[i]]) / len(y_true)
 
 
